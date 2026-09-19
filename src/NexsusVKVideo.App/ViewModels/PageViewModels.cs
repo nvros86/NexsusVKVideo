@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using NexsusVKVideo.App.Models;
+using NexsusVKVideo.App.Services;
 using NexsusVKVideo.Core.Contracts;
 using NexsusVKVideo.Core.Models;
 
@@ -168,6 +169,89 @@ public sealed class FavoritesPageViewModel : LocalDataPageViewModel
         }
 
         OnPropertyChanged(nameof(HasVideos));
+    }
+}
+
+public sealed class SettingsPageViewModel : LocalDataPageViewModel
+{
+    private const int SettingsSchemaVersion = 1;
+    private readonly ISettingsStore _settingsStore;
+    private readonly IHistoryRepository _historyRepository;
+    private readonly IThemeService _themeService;
+    private readonly IWebViewProfileResetScheduler _webViewProfileResetScheduler;
+    private string _selectedTheme = "Dark";
+
+    public SettingsPageViewModel(
+        ISettingsStore settingsStore,
+        IHistoryRepository historyRepository,
+        IThemeService themeService,
+        IWebViewProfileResetScheduler webViewProfileResetScheduler)
+        : base("Настройки", "Предпочтения и локальные данные управляются только на этом устройстве.")
+    {
+        _settingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
+        _historyRepository = historyRepository ?? throw new ArgumentNullException(nameof(historyRepository));
+        _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
+        _webViewProfileResetScheduler = webViewProfileResetScheduler ?? throw new ArgumentNullException(nameof(webViewProfileResetScheduler));
+        LoadCommand = new AsyncRelayCommand(LoadAsync, ReportFailure);
+        SaveThemeCommand = new AsyncRelayCommand(SaveThemeAsync, ReportFailure);
+        ClearHistoryCommand = new AsyncRelayCommand(ClearHistoryAsync, ReportFailure);
+        ScheduleWebViewResetCommand = new AsyncRelayCommand(ScheduleWebViewResetAsync, ReportFailure);
+    }
+
+    public ReadOnlyCollection<string> ThemeOptions { get; } = new List<string> { "Dark", "Light" }.AsReadOnly();
+
+    public string SelectedTheme
+    {
+        get => _selectedTheme;
+        set => SetProperty(ref _selectedTheme, value);
+    }
+
+    public ICommand LoadCommand { get; }
+
+    public ICommand SaveThemeCommand { get; }
+
+    public ICommand ClearHistoryCommand { get; }
+
+    public ICommand ScheduleWebViewResetCommand { get; }
+
+    private async Task LoadAsync(CancellationToken cancellationToken)
+    {
+        IsLoading = true;
+        Message = null;
+        var settings = await _settingsStore.LoadAsync(cancellationToken);
+        SelectedTheme = ThemeOptions.Contains(settings.Theme) ? settings.Theme : "Dark";
+        _themeService.Apply(SelectedTheme);
+        IsLoading = false;
+    }
+
+    private async Task SaveThemeAsync(CancellationToken cancellationToken)
+    {
+        if (!ThemeOptions.Contains(SelectedTheme))
+        {
+            throw new ArgumentOutOfRangeException(nameof(SelectedTheme), "Unsupported theme.");
+        }
+
+        IsLoading = true;
+        _themeService.Apply(SelectedTheme);
+        await _settingsStore.SaveAsync(new AppSettings(SettingsSchemaVersion, SelectedTheme), cancellationToken);
+        IsLoading = false;
+        Message = "Тема применена и сохранена на этом устройстве.";
+    }
+
+    private async Task ClearHistoryAsync(CancellationToken cancellationToken)
+    {
+        IsLoading = true;
+        await _historyRepository.ClearAsync(cancellationToken);
+        IsLoading = false;
+        Message = "История очищена на этом устройстве.";
+    }
+
+    private async Task ScheduleWebViewResetAsync(CancellationToken cancellationToken)
+    {
+        IsLoading = true;
+        await _webViewProfileResetScheduler.ScheduleAsync(cancellationToken);
+        IsLoading = false;
+        Message = "Кэш и сессии встроенного плеера будут очищены при следующем запуске приложения.";
     }
 }
 

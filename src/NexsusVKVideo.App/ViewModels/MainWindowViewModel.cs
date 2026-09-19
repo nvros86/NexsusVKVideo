@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
 using NexsusVKVideo.App.Models;
+using NexsusVKVideo.App.Services;
 using NexsusVKVideo.Core.Contracts;
 using NexsusVKVideo.Core.Models;
 
@@ -12,6 +13,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private readonly HomePageViewModel _homePage;
     private readonly LibraryPageViewModel _libraryPage;
     private readonly FavoritesPageViewModel _favoritesPage;
+    private readonly SettingsPageViewModel _settingsPage;
     private readonly IHistoryRepository _historyRepository;
     private readonly IFavoritesRepository _favoritesRepository;
     private readonly AsyncRelayCommand<DemoVideo> _openDemoCommand;
@@ -19,7 +21,12 @@ public sealed class MainWindowViewModel : ObservableObject
     private NavigationItemViewModel? _selectedNavigation;
     private PageViewModel _currentPage;
 
-    public MainWindowViewModel(IHistoryRepository historyRepository, IFavoritesRepository favoritesRepository)
+    public MainWindowViewModel(
+        IHistoryRepository historyRepository,
+        IFavoritesRepository favoritesRepository,
+        ISettingsStore settingsStore,
+        IThemeService themeService,
+        IWebViewProfileResetScheduler webViewProfileResetScheduler)
     {
         _historyRepository = historyRepository ?? throw new ArgumentNullException(nameof(historyRepository));
         _favoritesRepository = favoritesRepository ?? throw new ArgumentNullException(nameof(favoritesRepository));
@@ -31,6 +38,7 @@ public sealed class MainWindowViewModel : ObservableObject
         _homePage = new HomePageViewModel(_openDemoCommand);
         _libraryPage = new LibraryPageViewModel(_historyRepository);
         _favoritesPage = new FavoritesPageViewModel(_favoritesRepository);
+        _settingsPage = new SettingsPageViewModel(settingsStore, _historyRepository, themeService, webViewProfileResetScheduler);
         Player.PropertyChanged += OnPlayerPropertyChanged;
         NavigationItems = new ObservableCollection<NavigationItemViewModel>
         {
@@ -115,7 +123,7 @@ public sealed class MainWindowViewModel : ObservableObject
         "library" => LoadPage(_libraryPage),
         "favorites" => LoadPage(_favoritesPage),
         "ai" => new PlaceholderPageViewModel("AI Center", "Скоро", "AI-функции и фоновые запросы не выполняются."),
-        "settings" => new PlaceholderPageViewModel("Настройки", "Тема, приватность и очистка данных появятся на этапе 0.2.", "Настройки не сохраняются в этом демонстрационном каркасе."),
+        "settings" => LoadPage(_settingsPage),
         _ => _homePage
     };
 
@@ -128,6 +136,12 @@ public sealed class MainWindowViewModel : ObservableObject
     private static PageViewModel LoadPage(FavoritesPageViewModel page)
     {
         page.RefreshCommand.Execute(null);
+        return page;
+    }
+
+    private static PageViewModel LoadPage(SettingsPageViewModel page)
+    {
+        page.LoadCommand.Execute(null);
         return page;
     }
 }

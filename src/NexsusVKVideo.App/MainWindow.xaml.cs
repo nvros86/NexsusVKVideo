@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
 using NexsusVKVideo.App.ViewModels;
+using NexsusVKVideo.Infrastructure.Storage;
 using NexsusVKVideo.Infrastructure.Vk;
 
 namespace NexsusVKVideo.App;
@@ -28,10 +29,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            var userDataFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "NexsusVKVideo",
-                "WebView2");
+            var userDataFolder = ApplicationDataPaths.GetWebViewUserDataPath();
             Directory.CreateDirectory(userDataFolder);
 
             var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: userDataFolder);

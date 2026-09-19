@@ -89,6 +89,35 @@
                 </StackPanel>
             </ScrollViewer>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsPageViewModel}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="24" MaxWidth="720">
+                    <TextBlock FontSize="28" FontWeight="SemiBold" Text="{Binding Title}" />
+                    <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding Description}" TextWrapping="Wrap" />
+                    <Border Margin="0,24,0,0" Padding="16" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="12">
+                        <StackPanel>
+                            <TextBlock FontSize="22" FontWeight="SemiBold" Text="Оформление" />
+                            <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="Тема применяется сразу и сохраняется для следующих запусков." TextWrapping="Wrap" />
+                            <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
+                                <ComboBox Width="180" Height="40" AutomationProperties.Name="Тема приложения" ItemsSource="{Binding ThemeOptions}" SelectedItem="{Binding SelectedTheme, Mode=TwoWay}" />
+                                <Button Margin="12,0,0,0" Padding="12,8" Command="{Binding SaveThemeCommand}" Content="Применить тему" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Margin="0,16,0,0" Padding="16" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="12">
+                        <StackPanel>
+                            <TextBlock FontSize="22" FontWeight="SemiBold" Text="Приватность и данные" />
+                            <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="История и избранное находятся только в локальном профиле. Приложение не сохраняет пароль VK, токены или cookies в SQLite." TextWrapping="Wrap" />
+                            <Button Margin="0,16,0,0" Padding="12,8" HorizontalAlignment="Left" AutomationProperties.Name="Очистить историю на устройстве" Command="{Binding ClearHistoryCommand}" Content="Очистить историю" />
+                            <TextBlock Margin="0,16,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="Очистка данных плеера удалит кэш и сессии WebView2 при следующем запуске. Это может потребовать повторной авторизации на стороне VK." TextWrapping="Wrap" />
+                            <Button Margin="0,12,0,0" Padding="12,8" HorizontalAlignment="Left" AutomationProperties.Name="Очистить данные встроенного плеера после перезапуска" Command="{Binding ScheduleWebViewResetCommand}" Content="Очистить данные плеера после перезапуска" />
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Margin="0,16,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding Message}" TextWrapping="Wrap" />
+                    <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="Версия схемы локальных настроек: 1" />
+                </StackPanel>
+            </ScrollViewer>
+        </DataTemplate>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions><ColumnDefinition Width="224" /><ColumnDefinition Width="*" /><ColumnDefinition Width="400" /></Grid.ColumnDefinitions>
