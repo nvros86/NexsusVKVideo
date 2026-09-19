@@ -17,12 +17,28 @@ public partial class MainWindow : Window
     public MainWindow(MainWindowViewModel viewModel)
     {
         InitializeComponent();
+        FitInitialWindowToWorkArea();
         _viewModel = viewModel;
         DataContext = _viewModel;
         Loaded += OnLoaded;
         Closed += OnClosed;
         _viewModel.Player.PropertyChanged += OnPlayerPropertyChanged;
         _viewModel.Player.BrowserRequested += OnBrowserRequested;
+    }
+
+    private void FitInitialWindowToWorkArea()
+    {
+        const double edgePadding = 16;
+        var workArea = SystemParameters.WorkArea;
+        var maximumWidth = Math.Max(1, workArea.Width - (edgePadding * 2));
+        var maximumHeight = Math.Max(1, workArea.Height - (edgePadding * 2));
+
+        MaxWidth = maximumWidth;
+        MaxHeight = maximumHeight;
+        MinWidth = Math.Min(MinWidth, maximumWidth);
+        MinHeight = Math.Min(MinHeight, maximumHeight);
+        Width = Math.Clamp(Width, MinWidth, maximumWidth);
+        Height = Math.Clamp(Height, MinHeight, maximumHeight);
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)

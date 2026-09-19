@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:NexsusVKVideo.App.ViewModels"
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
-        Title="NexsusVKVideo" Width="1600" Height="1000" MinWidth="960" MinHeight="640"
+        Title="NexsusVKVideo" Width="1280" Height="800" MinWidth="960" MinHeight="640"
         Background="{DynamicResource Brush.Background}" Foreground="{DynamicResource Brush.TextPrimary}"
         FontFamily="Segoe UI" SnapsToDevicePixels="True" UseLayoutRounding="True" WindowStartupLocation="CenterScreen">
     <Window.Resources>
