@@ -14,6 +14,10 @@ public partial class MainWindow : Window
     private const int DwmUseImmersiveDarkMode = 20;
     private const int DwmUseImmersiveDarkModeBeforeWindows10_2004 = 19;
     private static readonly Uri VkVideoHomeUri = new("https://vkvideo.ru/", UriKind.Absolute);
+    private WindowState _windowStateBeforeFullScreen;
+    private WindowStyle _windowStyleBeforeFullScreen;
+    private ResizeMode _resizeModeBeforeFullScreen;
+    private bool _isWebViewFullScreen;
 
     public MainWindow()
     {
@@ -21,6 +25,7 @@ public partial class MainWindow : Window
         FitInitialWindowToWorkArea();
         SourceInitialized += OnSourceInitialized;
         Loaded += OnLoaded;
+        Closed += OnClosed;
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
@@ -79,6 +84,7 @@ public partial class MainWindow : Window
             BrowserWebView.CoreWebView2.NavigationStarting += OnNavigationStarting;
             BrowserWebView.CoreWebView2.NavigationCompleted += OnNavigationCompleted;
             BrowserWebView.CoreWebView2.NewWindowRequested += OnNewWindowRequested;
+            BrowserWebView.CoreWebView2.ContainsFullScreenElementChanged += OnContainsFullScreenElementChanged;
             BrowserWebView.CoreWebView2.Navigate(VkVideoHomeUri.AbsoluteUri);
         }
         catch (WebView2RuntimeNotFoundException)
@@ -122,10 +128,60 @@ public partial class MainWindow : Window
         ShowError("Новое окно заблокировано: приложение открывает только защищённые сайты VK.");
     }
 
+    private void OnContainsFullScreenElementChanged(object? sender, object e)
+    {
+        if (BrowserWebView.CoreWebView2?.ContainsFullScreenElement == true)
+        {
+            EnterWebViewFullScreen();
+            return;
+        }
+
+        ExitWebViewFullScreen();
+    }
+
+    private void EnterWebViewFullScreen()
+    {
+        if (_isWebViewFullScreen)
+        {
+            return;
+        }
+
+        _isWebViewFullScreen = true;
+        _windowStateBeforeFullScreen = WindowState;
+        _windowStyleBeforeFullScreen = WindowStyle;
+        _resizeModeBeforeFullScreen = ResizeMode;
+        WindowState = WindowState.Normal;
+        WindowStyle = WindowStyle.None;
+        ResizeMode = ResizeMode.NoResize;
+        WindowState = WindowState.Maximized;
+    }
+
+    private void ExitWebViewFullScreen()
+    {
+        if (!_isWebViewFullScreen)
+        {
+            return;
+        }
+
+        _isWebViewFullScreen = false;
+        WindowState = WindowState.Normal;
+        WindowStyle = _windowStyleBeforeFullScreen;
+        ResizeMode = _resizeModeBeforeFullScreen;
+        WindowState = _windowStateBeforeFullScreen;
+    }
+
     private void ShowError(string message)
     {
         BrowserErrorText.Text = message;
         BrowserErrorPanel.Visibility = Visibility.Visible;
+    }
+
+    private void OnClosed(object? sender, EventArgs e)
+    {
+        if (BrowserWebView.CoreWebView2 is not null)
+        {
+            BrowserWebView.CoreWebView2.ContainsFullScreenElementChanged -= OnContainsFullScreenElementChanged;
+        }
     }
 
     [DllImport("dwmapi.dll", PreserveSig = true)]
