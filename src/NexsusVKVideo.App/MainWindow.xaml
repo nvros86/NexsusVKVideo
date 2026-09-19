@@ -3,11 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         Title="VK Video" Width="1280" Height="800" MinWidth="960" MinHeight="640"
+        Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+        Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"
         WindowStartupLocation="CenterScreen" SnapsToDevicePixels="True" UseLayoutRounding="True">
     <Grid>
         <wv2:WebView2 x:Name="BrowserWebView" />
-        <Border x:Name="BrowserErrorPanel" Padding="24" Background="#EE101A2B" Visibility="Collapsed">
-            <TextBlock x:Name="BrowserErrorText" MaxWidth="640" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#EAF2FF" TextAlignment="Center" TextWrapping="Wrap" />
+        <Border x:Name="BrowserErrorPanel" Padding="24" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" Visibility="Collapsed">
+            <TextBlock x:Name="BrowserErrorText" MaxWidth="640" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}" TextAlignment="Center" TextWrapping="Wrap" />
         </Border>
     </Grid>
 </Window>
