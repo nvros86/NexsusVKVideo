@@ -1,0 +1,33 @@
+name: build
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate development kit
+        shell: pwsh
+        run: ./scripts/Validate-Package.ps1
+      - name: Detect application
+        shell: pwsh
+        run: |
+          if (!(Test-Path 'NexsusVKVideo.sln')) { throw 'Required root solution NexsusVKVideo.sln is missing.' }
+          if (!(Test-Path 'global.json')) { throw 'Pin the SDK in global.json.' }
+          if (!(Get-ChildItem tests -Recurse -Filter *.csproj)) { throw 'At least one test project is required.' }
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Restore
+        run: dotnet restore NexsusVKVideo.sln
+      - name: Build
+        run: dotnet build NexsusVKVideo.sln --configuration Release --no-restore
+      - name: Test
+        shell: pwsh
+        run: |
+          dotnet test NexsusVKVideo.sln --configuration Release --no-build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\NexsusVKVideo.Core\NexsusVKVideo.Core.csproj" />
+  </ItemGroup>
+</Project>
