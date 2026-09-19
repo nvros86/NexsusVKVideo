@@ -56,15 +56,15 @@ public partial class MainWindow : Window
     {
         const double edgePadding = 16;
         var workArea = SystemParameters.WorkArea;
-        var maximumWidth = Math.Max(1, workArea.Width - (edgePadding * 2));
-        var maximumHeight = Math.Max(1, workArea.Height - (edgePadding * 2));
+        var availableWidth = Math.Max(1, workArea.Width - (edgePadding * 2));
+        var availableHeight = Math.Max(1, workArea.Height - (edgePadding * 2));
+        var minimumWidth = Math.Min(MinWidth, availableWidth);
+        var minimumHeight = Math.Min(MinHeight, availableHeight);
 
-        MaxWidth = maximumWidth;
-        MaxHeight = maximumHeight;
-        MinWidth = Math.Min(MinWidth, maximumWidth);
-        MinHeight = Math.Min(MinHeight, maximumHeight);
-        Width = Math.Clamp(Width, MinWidth, maximumWidth);
-        Height = Math.Clamp(Height, MinHeight, maximumHeight);
+        MinWidth = minimumWidth;
+        MinHeight = minimumHeight;
+        Width = Math.Clamp(Width, minimumWidth, availableWidth);
+        Height = Math.Clamp(Height, minimumHeight, availableHeight);
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
