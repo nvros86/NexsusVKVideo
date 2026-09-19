@@ -50,12 +50,51 @@
                 <Border Margin="0,24,0,0" Padding="16" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="12"><TextBlock Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding ActionHint}" TextWrapping="Wrap" /></Border>
             </StackPanel></Grid>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LibraryPageViewModel}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="24">
+                    <TextBlock FontSize="28" FontWeight="SemiBold" Text="{Binding Title}" />
+                    <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding Description}" TextWrapping="Wrap" />
+                    <StackPanel Margin="0,24,0,0" Orientation="Horizontal">
+                        <Button Padding="12,8" AutomationProperties.Name="Обновить историю" Command="{Binding RefreshCommand}" Content="Обновить" />
+                        <Button Margin="12,0,0,0" Padding="12,8" AutomationProperties.Name="Очистить историю" Command="{Binding ClearCommand}" Content="Очистить историю" />
+                    </StackPanel>
+                    <TextBlock Margin="0,16,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding Message}" TextWrapping="Wrap" />
+                    <Border Margin="0,16,0,0" Padding="16" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="12">
+                        <ItemsControl ItemsSource="{Binding Entries}">
+                            <ItemsControl.ItemTemplate><DataTemplate><Grid Margin="0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <StackPanel><TextBlock FontWeight="SemiBold" Text="{Binding Video.Title}" /><TextBlock Margin="0,4,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding Video.Key.Provider}" /></StackPanel>
+                                <TextBlock Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding WatchedAt, StringFormat={}{0:dd.MM.yyyy HH:mm}}" />
+                            </Grid></DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:FavoritesPageViewModel}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="24">
+                    <TextBlock FontSize="28" FontWeight="SemiBold" Text="{Binding Title}" />
+                    <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding Description}" TextWrapping="Wrap" />
+                    <Button Margin="0,24,0,0" Padding="12,8" HorizontalAlignment="Left" AutomationProperties.Name="Обновить избранное" Command="{Binding RefreshCommand}" Content="Обновить" />
+                    <TextBlock Margin="0,16,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding Message}" TextWrapping="Wrap" />
+                    <Border Margin="0,16,0,0" Padding="16" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="12">
+                        <ItemsControl ItemsSource="{Binding Videos}">
+                            <ItemsControl.ItemTemplate><DataTemplate><Grid Margin="0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <StackPanel><TextBlock FontWeight="SemiBold" Text="{Binding Title}" /><TextBlock Margin="0,4,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding Key.Provider}" /></StackPanel>
+                                <Button Grid.Column="1" Margin="16,0,0,0" Padding="12,8" VerticalAlignment="Center" AutomationProperties.Name="Удалить из избранного" Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Content="Удалить" />
+                            </Grid></DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </DataTemplate>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions><ColumnDefinition Width="224" /><ColumnDefinition Width="*" /><ColumnDefinition Width="400" /></Grid.ColumnDefinitions>
         <Border Grid.Column="0" Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,1,0">
             <Grid Margin="16"><Grid.RowDefinitions><RowDefinition Height="80" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                <StackPanel Grid.Row="0"><TextBlock FontSize="24" FontWeight="SemiBold"><Run Text="Nexsus" /><Run Foreground="{DynamicResource Brush.Accent}" Text="VK" /><Run Text="Video" /></TextBlock><TextBlock Margin="0,6,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="Этап 0.1" /></StackPanel>
+                <StackPanel Grid.Row="0"><TextBlock FontSize="24" FontWeight="SemiBold"><Run Text="Nexsus" /><Run Foreground="{DynamicResource Brush.Accent}" Text="VK" /><Run Text="Video" /></TextBlock><TextBlock Margin="0,6,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="Этап 0.2" /></StackPanel>
                 <ListBox Grid.Row="1" AutomationProperties.Name="Навигация" ItemsSource="{Binding NavigationItems}" SelectedItem="{Binding SelectedNavigation, Mode=TwoWay}" Style="{StaticResource NavigationListStyle}">
                     <ListBox.ItemContainerStyle><StaticResource ResourceKey="NavigationListItemStyle" /></ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate><DataTemplate><StackPanel Orientation="Horizontal"><TextBlock Width="28" FontSize="20" Text="{Binding Glyph}" /><TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Text="{Binding Title}" /></StackPanel></DataTemplate></ListBox.ItemTemplate>
@@ -76,6 +115,8 @@
                 <Border Margin="0,16,0,0" Height="230" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="12" ClipToBounds="True" Visibility="{Binding Player.HasEmbed, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <wv2:WebView2 x:Name="PlayerWebView" />
                 </Border>
+                <Button Margin="0,16,0,0" Padding="12,8" Command="{Binding DataContext.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Player.CurrentVideo}" Content="{Binding Player.FavoriteButtonText}" ToolTip="Сохраняет только поддерживаемое видео в локальном избранном." />
+                <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource Brush.Error}" Text="{Binding Player.DataMessage}" TextWrapping="Wrap" />
                 <Button Margin="0,16,0,0" Padding="12,8" Command="{Binding Player.OpenInBrowserCommand}" Content="Открыть в системном браузере" ToolTip="Открывает только подтверждённую страницу vk.ru для текущего виджета." />
                 <Button Margin="0,12,0,0" Padding="12,8" Command="{Binding Player.ClearCommand}" Content="Закрыть сценарий" />
             </StackPanel>

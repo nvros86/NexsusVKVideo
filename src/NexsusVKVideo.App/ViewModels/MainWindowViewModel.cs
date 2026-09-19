@@ -1,20 +1,37 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows.Input;
 using NexsusVKVideo.App.Models;
+using NexsusVKVideo.Core.Contracts;
+using NexsusVKVideo.Core.Models;
 
 namespace NexsusVKVideo.App.ViewModels;
 
 public sealed class MainWindowViewModel : ObservableObject
 {
     private readonly HomePageViewModel _homePage;
+    private readonly LibraryPageViewModel _libraryPage;
+    private readonly FavoritesPageViewModel _favoritesPage;
+    private readonly IHistoryRepository _historyRepository;
+    private readonly IFavoritesRepository _favoritesRepository;
+    private readonly AsyncRelayCommand<DemoVideo> _openDemoCommand;
+    private readonly AsyncRelayCommand<VideoSummary> _toggleFavoriteCommand;
     private NavigationItemViewModel? _selectedNavigation;
     private PageViewModel _currentPage;
 
-    public MainWindowViewModel()
+    public MainWindowViewModel(IHistoryRepository historyRepository, IFavoritesRepository favoritesRepository)
     {
+        _historyRepository = historyRepository ?? throw new ArgumentNullException(nameof(historyRepository));
+        _favoritesRepository = favoritesRepository ?? throw new ArgumentNullException(nameof(favoritesRepository));
         Player = new PlayerViewModel();
-        OpenDemoCommand = new RelayCommand<DemoVideo>(OpenDemo);
-        _homePage = new HomePageViewModel(OpenDemoCommand);
+        _openDemoCommand = new AsyncRelayCommand<DemoVideo>(OpenDemoAsync, _ => Player.ReportDataFailure());
+        _toggleFavoriteCommand = new AsyncRelayCommand<VideoSummary>(ToggleFavoriteAsync, _ => Player.ReportDataFailure());
+        OpenDemoCommand = _openDemoCommand;
+        ToggleFavoriteCommand = _toggleFavoriteCommand;
+        _homePage = new HomePageViewModel(_openDemoCommand);
+        _libraryPage = new LibraryPageViewModel(_historyRepository);
+        _favoritesPage = new FavoritesPageViewModel(_favoritesRepository);
+        Player.PropertyChanged += OnPlayerPropertyChanged;
         NavigationItems = new ObservableCollection<NavigationItemViewModel>
         {
             new("home", "Главная", "⌂"),
@@ -55,16 +72,62 @@ public sealed class MainWindowViewModel : ObservableObject
 
     public ICommand OpenDemoCommand { get; }
 
-    private void OpenDemo(DemoVideo video) => Player.OpenDemo(video);
+    public ICommand ToggleFavoriteCommand { get; }
+
+    private async Task OpenDemoAsync(DemoVideo video, CancellationToken cancellationToken)
+    {
+        Player.OpenDemo(video);
+        if (video.LocalVideo is null)
+        {
+            return;
+        }
+
+        await _historyRepository.AddAsync(new HistoryEntry(video.LocalVideo, DateTimeOffset.UtcNow), cancellationToken);
+        var favorites = await _favoritesRepository.GetAllAsync(cancellationToken);
+        Player.SetFavorite(favorites.Any(candidate => candidate.Key == video.LocalVideo.Key));
+    }
+
+    private async Task ToggleFavoriteAsync(VideoSummary video, CancellationToken cancellationToken)
+    {
+        if (Player.IsFavorite)
+        {
+            await _favoritesRepository.RemoveAsync(video.Key, cancellationToken);
+            Player.SetFavorite(false);
+            return;
+        }
+
+        await _favoritesRepository.AddAsync(video, cancellationToken);
+        Player.SetFavorite(true);
+    }
+
+    private void OnPlayerPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PlayerViewModel.CurrentVideo))
+        {
+            _toggleFavoriteCommand.RaiseCanExecuteChanged();
+        }
+    }
 
     private PageViewModel CreatePage(string route) => route switch
     {
         "home" => _homePage,
         "search" => new PlaceholderPageViewModel("Поиск", "Поиск будет добавлен после подтверждения документированного способа доступа к данным поставщика.", "API-запросы и live search не выполняются в демонстрационном каркасе."),
-        "library" => new PlaceholderPageViewModel("Библиотека", "Локальная история появится на этапе 0.2.", "В этой версии никакие данные просмотра не сохраняются."),
-        "favorites" => new PlaceholderPageViewModel("Избранное", "Хранилище избранного появится на этапе 0.2.", "Core уже фиксирует правило уникальности provider + videoId."),
+        "library" => LoadPage(_libraryPage),
+        "favorites" => LoadPage(_favoritesPage),
         "ai" => new PlaceholderPageViewModel("AI Center", "Скоро", "AI-функции и фоновые запросы не выполняются."),
         "settings" => new PlaceholderPageViewModel("Настройки", "Тема, приватность и очистка данных появятся на этапе 0.2.", "Настройки не сохраняются в этом демонстрационном каркасе."),
         _ => _homePage
     };
+
+    private static PageViewModel LoadPage(LibraryPageViewModel page)
+    {
+        page.RefreshCommand.Execute(null);
+        return page;
+    }
+
+    private static PageViewModel LoadPage(FavoritesPageViewModel page)
+    {
+        page.RefreshCommand.Execute(null);
+        return page;
+    }
 }

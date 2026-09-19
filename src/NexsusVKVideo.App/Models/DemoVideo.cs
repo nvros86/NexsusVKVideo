@@ -1,3 +1,5 @@
+using NexsusVKVideo.Core.Models;
+
 namespace NexsusVKVideo.App.Models;
 
 public sealed record DemoVideo(
@@ -7,4 +9,5 @@ public sealed record DemoVideo(
     string Description,
     string Badge = "ДЕМО",
     Uri? EmbedUri = null,
-    Uri? BrowserUri = null);
+    Uri? BrowserUri = null,
+    VideoSummary? LocalVideo = null);
