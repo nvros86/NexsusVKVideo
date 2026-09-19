@@ -13,6 +13,8 @@ public partial class MainWindow : Window
 {
     private readonly MainWindowViewModel _viewModel;
     private bool _webViewInitialized;
+    private bool _browserWebViewInitialized;
+    private bool _browserHomeRequested;
 
     public MainWindow(MainWindowViewModel viewModel)
     {
@@ -24,6 +26,7 @@ public partial class MainWindow : Window
         Closed += OnClosed;
         _viewModel.Player.PropertyChanged += OnPlayerPropertyChanged;
         _viewModel.Player.BrowserRequested += OnBrowserRequested;
+        _viewModel.BrowserRequested += OnVkVideoBrowserRequested;
     }
 
     private void FitInitialWindowToWorkArea()
@@ -50,10 +53,16 @@ public partial class MainWindow : Window
 
             var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: userDataFolder);
             await PlayerWebView.EnsureCoreWebView2Async(environment);
+            await BrowserWebView.EnsureCoreWebView2Async(environment);
             PlayerWebView.CoreWebView2.NavigationStarting += OnNavigationStarting;
             PlayerWebView.CoreWebView2.NavigationCompleted += OnNavigationCompleted;
+            BrowserWebView.CoreWebView2.NavigationStarting += OnBrowserNavigationStarting;
+            BrowserWebView.CoreWebView2.NavigationCompleted += OnBrowserNavigationCompleted;
+            BrowserWebView.CoreWebView2.NewWindowRequested += OnBrowserNewWindowRequested;
             _webViewInitialized = true;
+            _browserWebViewInitialized = true;
             NavigateToCurrentEmbed();
+            NavigateBrowserHomeIfRequested();
         }
         catch (WebView2RuntimeNotFoundException)
         {
@@ -71,6 +80,28 @@ public partial class MainWindow : Window
         {
             NavigateToCurrentEmbed();
         }
+    }
+
+    private void OnVkVideoBrowserRequested(object? sender, EventArgs e)
+    {
+        _browserHomeRequested = true;
+        NavigateBrowserHomeIfRequested();
+    }
+
+    private void NavigateBrowserHomeIfRequested()
+    {
+        if (!_browserHomeRequested || !_browserWebViewInitialized || BrowserWebView.CoreWebView2 is null)
+        {
+            return;
+        }
+
+        _browserHomeRequested = false;
+        if (_viewModel.CurrentPage is VkVideoBrowserPageViewModel page)
+        {
+            page.ClearMessage();
+        }
+
+        BrowserWebView.CoreWebView2.Navigate(VkVideoBrowserPageViewModel.HomeUri.AbsoluteUri);
     }
 
     private void NavigateToCurrentEmbed()
@@ -122,6 +153,53 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OnBrowserNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
+    {
+        if (Uri.TryCreate(e.Uri, UriKind.Absolute, out var target) && VkEmbedUriValidator.IsAllowedVkSite(target))
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        ReportBrowserNavigationFailure("Переход заблокирован: встроенный браузер открывает только защищённые сайты VK.");
+    }
+
+    private void OnBrowserNavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
+    {
+        if (!e.IsSuccess)
+        {
+            ReportBrowserNavigationFailure($"Официальный сайт VK Video не загрузился ({e.WebErrorStatus}). Проверьте подключение и повторите попытку.");
+        }
+    }
+
+    private void OnBrowserNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
+    {
+        e.Handled = true;
+        if (Uri.TryCreate(e.Uri, UriKind.Absolute, out var target) && VkEmbedUriValidator.IsAllowedVkSite(target))
+        {
+            BrowserWebView.CoreWebView2?.Navigate(target.AbsoluteUri);
+            return;
+        }
+
+        ReportBrowserNavigationFailure("Новое окно заблокировано: разрешены только защищённые сайты VK.");
+    }
+
+    private void OnReloadBrowserClick(object sender, RoutedEventArgs e)
+    {
+        if (_browserWebViewInitialized)
+        {
+            BrowserWebView.CoreWebView2?.Reload();
+        }
+    }
+
+    private void ReportBrowserNavigationFailure(string message)
+    {
+        if (_viewModel.CurrentPage is VkVideoBrowserPageViewModel page)
+        {
+            page.ReportNavigationFailure(message);
+        }
+    }
+
     private void OnBrowserRequested(object? sender, Uri uri)
     {
         if (!VkEmbedUriValidator.IsAllowedVideoPage(uri))
@@ -144,5 +222,6 @@ public partial class MainWindow : Window
     {
         _viewModel.Player.PropertyChanged -= OnPlayerPropertyChanged;
         _viewModel.Player.BrowserRequested -= OnBrowserRequested;
+        _viewModel.BrowserRequested -= OnVkVideoBrowserRequested;
     }
 }

@@ -15,6 +15,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private readonly LibraryPageViewModel _libraryPage;
     private readonly FavoritesPageViewModel _favoritesPage;
     private readonly SettingsPageViewModel _settingsPage;
+    private readonly VkVideoBrowserPageViewModel _vkVideoBrowserPage;
     private readonly ImportPageViewModel _importPage;
     private readonly IHistoryRepository _historyRepository;
     private readonly IFavoritesRepository _favoritesRepository;
@@ -23,6 +24,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private readonly AsyncRelayCommand<VideoSummary> _toggleFavoriteCommand;
     private NavigationItemViewModel? _selectedNavigation;
     private PageViewModel _currentPage;
+    private bool _isBrowserMode;
 
     public MainWindowViewModel(
         IHistoryRepository historyRepository,
@@ -44,12 +46,13 @@ public sealed class MainWindowViewModel : ObservableObject
         _libraryPage = new LibraryPageViewModel(_historyRepository);
         _favoritesPage = new FavoritesPageViewModel(_favoritesRepository);
         _settingsPage = new SettingsPageViewModel(settingsStore, _historyRepository, themeService, webViewProfileResetScheduler);
+        _vkVideoBrowserPage = new VkVideoBrowserPageViewModel();
         _importPage = new ImportPageViewModel(ImportVideoLinkAsync);
         Player.PropertyChanged += OnPlayerPropertyChanged;
         NavigationItems = new ObservableCollection<NavigationItemViewModel>
         {
             new("home", "Главная", "⌂"),
-            new("search", "Поиск", "⌕"),
+            new("browser", "VK Video", "▶"),
             new("library", "Библиотека", "▣"),
             new("favorites", "Избранное", "♡"),
             new("ai", "AI Center", "✦"),
@@ -79,14 +82,41 @@ public sealed class MainWindowViewModel : ObservableObject
     public PageViewModel CurrentPage
     {
         get => _currentPage;
-        private set => SetProperty(ref _currentPage, value);
+        private set
+        {
+            if (SetProperty(ref _currentPage, value))
+            {
+                IsBrowserMode = value is VkVideoBrowserPageViewModel;
+            }
+        }
     }
+
+    public bool IsBrowserMode
+    {
+        get => _isBrowserMode;
+        private set
+        {
+            if (SetProperty(ref _isBrowserMode, value) && value)
+            {
+                OnPropertyChanged(nameof(IsMainShellVisible));
+                BrowserRequested?.Invoke(this, EventArgs.Empty);
+            }
+            else
+            {
+                OnPropertyChanged(nameof(IsMainShellVisible));
+            }
+        }
+    }
+
+    public bool IsMainShellVisible => !IsBrowserMode;
 
     public PlayerViewModel Player { get; }
 
     public ICommand OpenDemoCommand { get; }
 
     public ICommand ToggleFavoriteCommand { get; }
+
+    public event EventHandler? BrowserRequested;
 
     private async Task OpenDemoAsync(DemoVideo video, CancellationToken cancellationToken)
     {
@@ -149,7 +179,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private PageViewModel CreatePage(string route) => route switch
     {
         "home" => _homePage,
-        "search" => _importPage,
+        "browser" => _vkVideoBrowserPage,
         "library" => LoadPage(_libraryPage),
         "favorites" => LoadPage(_favoritesPage),
         "ai" => new PlaceholderPageViewModel("AI Center", "Скоро", "AI-функции и фоновые запросы не выполняются."),

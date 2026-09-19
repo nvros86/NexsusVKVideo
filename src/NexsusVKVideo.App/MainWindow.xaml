@@ -149,14 +149,14 @@
                 <TextBlock Grid.Row="3" Margin="16" Foreground="{DynamicResource Brush.TextSecondary}" Text="Демо-данные. Интеграция VK не заявляется." TextWrapping="Wrap" />
             </Grid>
         </Border>
-        <Grid Grid.Column="1"><Grid.RowDefinitions><RowDefinition Height="76" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <Grid Grid.Column="1" Visibility="{Binding IsMainShellVisible, Converter={StaticResource BooleanToVisibilityConverter}}"><Grid.RowDefinitions><RowDefinition Height="76" /><RowDefinition Height="*" /></Grid.RowDefinitions>
             <Border Grid.Row="0" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1"><Grid Margin="24,18"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                 <TextBox Grid.Column="0" Height="40" IsReadOnly="True" AutomationProperties.Name="Импорт публичной ссылки VK Video" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Border}" Foreground="{DynamicResource Brush.TextSecondary}" Padding="12,8" Text="Открывайте публичные ссылки VK Video без API-ключей" ToolTip="В разделе «Поиск» поддерживается импорт публичной ссылки VK Video." />
                 <TextBlock Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" Text="Гость" />
             </Grid></Border>
             <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" />
         </Grid>
-        <Border Grid.Column="2" Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1,0,0,0">
+        <Border Grid.Column="2" Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1,0,0,0" Visibility="{Binding IsMainShellVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel Margin="16"><TextBlock FontSize="22" FontWeight="SemiBold" Text="{Binding Player.Title}" />
                 <Border Margin="0,16,0,0" Padding="16" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="12"><StackPanel><TextBlock FontWeight="SemiBold" Text="{Binding Player.Status}" /><TextBlock Margin="0,8,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding Player.Message}" TextWrapping="Wrap" /></StackPanel></Border>
                 <Border Margin="0,16,0,0" Height="230" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="12" ClipToBounds="True" Visibility="{Binding Player.HasEmbed, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -167,6 +167,16 @@
                 <Button Margin="0,16,0,0" Padding="12,8" Command="{Binding Player.OpenInBrowserCommand}" Content="Открыть в системном браузере" ToolTip="Открывает только подтверждённую страницу vk.ru для текущего виджета." />
                 <Button Margin="0,12,0,0" Padding="12,8" Command="{Binding Player.ClearCommand}" Content="Закрыть сценарий" />
             </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Grid.ColumnSpan="2" Background="{DynamicResource Brush.Background}" Visibility="{Binding IsBrowserMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid><Grid.RowDefinitions><RowDefinition Height="76" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <Border Grid.Row="0" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1"><Grid Margin="24,18"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <TextBlock VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Text="VK Video — официальный сайт" />
+                    <Button Grid.Column="1" Padding="12,8" Click="OnReloadBrowserClick" Content="Обновить" />
+                </Grid></Border>
+                <wv2:WebView2 x:Name="BrowserWebView" Grid.Row="1" />
+                <TextBlock Grid.Row="2" Margin="24,8" Foreground="{DynamicResource Brush.Error}" Text="{Binding CurrentPage.Message}" TextWrapping="Wrap" />
+            </Grid>
         </Border>
     </Grid>
 </Window>

@@ -27,4 +27,22 @@ public sealed class VkEmbedUriValidatorTests
     {
         Assert.True(VkEmbedUriValidator.IsAllowedVideoPage(new Uri("https://vk.ru/video-22822305_456241864")));
     }
+
+    [Theory]
+    [InlineData("https://vkvideo.ru/")]
+    [InlineData("https://id.vk.ru/auth")]
+    [InlineData("https://oauth.vk.com/authorize")]
+    public void IsAllowedVkSite_AcceptsHttpsVkOwnedHosts(string value)
+    {
+        Assert.True(VkEmbedUriValidator.IsAllowedVkSite(new Uri(value)));
+    }
+
+    [Theory]
+    [InlineData("http://vkvideo.ru/")]
+    [InlineData("https://vkvideo.ru.evil.example/")]
+    [InlineData("https://example.com/")]
+    public void IsAllowedVkSite_RejectsOtherHostsAndSchemes(string value)
+    {
+        Assert.False(VkEmbedUriValidator.IsAllowedVkSite(new Uri(value)));
+    }
 }

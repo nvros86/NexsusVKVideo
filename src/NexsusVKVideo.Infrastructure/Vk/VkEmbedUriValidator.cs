@@ -19,11 +19,23 @@ public static class VkEmbedUriValidator
     public static bool IsAllowedVideoPage(Uri? uri) =>
         IsSecureVkUri(uri) && uri!.AbsolutePath.StartsWith("/video-", StringComparison.Ordinal);
 
+    public static bool IsAllowedVkSite(Uri? uri) =>
+        uri is { IsAbsoluteUri: true }
+        && string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+        && uri.Port == 443
+        && (IsVkOwnedHost(uri.Host, "vk.ru")
+            || IsVkOwnedHost(uri.Host, "vkvideo.ru")
+            || IsVkOwnedHost(uri.Host, "vk.com"));
+
     private static bool IsSecureVkUri(Uri? uri) =>
         uri is { IsAbsoluteUri: true }
         && string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
         && string.Equals(uri.Host, VkHost, StringComparison.OrdinalIgnoreCase)
         && uri.Port == 443;
+
+    private static bool IsVkOwnedHost(string host, string rootHost) =>
+        string.Equals(host, rootHost, StringComparison.OrdinalIgnoreCase)
+        || host.EndsWith($".{rootHost}", StringComparison.OrdinalIgnoreCase);
 
     private static Dictionary<string, string> ParseQuery(string query)
     {

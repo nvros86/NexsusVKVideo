@@ -45,6 +45,30 @@ public sealed class PlaceholderPageViewModel(string title, string description, s
     public string ActionHint { get; } = actionHint;
 }
 
+public sealed class VkVideoBrowserPageViewModel : PageViewModel
+{
+    public VkVideoBrowserPageViewModel()
+        : base(
+            "VK Video",
+            "Официальный сайт VK Video открыт внутри NexsusVKVideo. Поиск, каталог и вход выполняются на стороне VK.")
+    {
+    }
+
+    public static Uri HomeUri { get; } = new("https://vkvideo.ru/", UriKind.Absolute);
+
+    private string? _message;
+
+    public string? Message
+    {
+        get => _message;
+        private set => SetProperty(ref _message, value);
+    }
+
+    public void ReportNavigationFailure(string message) => Message = message;
+
+    public void ClearMessage() => Message = null;
+}
+
 public sealed class ImportPageViewModel : PageViewModel
 {
     private readonly Func<string, CancellationToken, Task> _import;
