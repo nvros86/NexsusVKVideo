@@ -1,6 +1,13 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Color x:Key="Color.Background">#080D18</Color>
+    <Color x:Key="Color.Surface">#101A2B</Color>
+    <Color x:Key="Color.Card">#152238</Color>
+    <Color x:Key="Color.Border">#29425D</Color>
     <Color x:Key="Color.TextPrimary">#EAF2FF</Color>
     <Color x:Key="Color.TextSecondary">#9CAFC8</Color>
+    <Color x:Key="Color.Accent">#27D9F2</Color>
+    <Color x:Key="Color.AccentBlue">#397BFF</Color>
+    <Color x:Key="Color.Error">#FF7384</Color>
+    <Color x:Key="Color.Success">#5FE0B1</Color>
 </ResourceDictionary>
