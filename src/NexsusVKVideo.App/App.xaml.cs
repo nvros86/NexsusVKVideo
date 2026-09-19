@@ -3,6 +3,7 @@ using NexsusVKVideo.App.Services;
 using NexsusVKVideo.App.ViewModels;
 using NexsusVKVideo.Core.Contracts;
 using NexsusVKVideo.Infrastructure.Storage;
+using NexsusVKVideo.Infrastructure.Vk;
 using System.Windows;
 
 namespace NexsusVKVideo.App;
@@ -25,6 +26,7 @@ public partial class App : Application
                 ApplicationDataPaths.GetWebViewUserDataPath(),
                 ApplicationDataPaths.GetWebViewProfileResetMarkerPath()))
             .AddSingleton<IWebViewProfileResetScheduler>(services => services.GetRequiredService<WebViewProfileResetScheduler>())
+            .AddSingleton<VkVideoLinkParser>()
             .AddSingleton<MainWindowViewModel>()
             .AddSingleton<MainWindow>()
             .BuildServiceProvider();

@@ -45,6 +45,57 @@ public sealed class PlaceholderPageViewModel(string title, string description, s
     public string ActionHint { get; } = actionHint;
 }
 
+public sealed class ImportPageViewModel : PageViewModel
+{
+    private readonly Func<string, CancellationToken, Task> _import;
+    private string _linkText = string.Empty;
+    private string? _message;
+
+    public ImportPageViewModel(Func<string, CancellationToken, Task> import)
+        : base(
+            "Открыть публичную ссылку VK Video",
+            "Вставьте ссылку формата https://vk.ru/video-{owner}_{video}. Приложение не отправляет API-запросы и не использует ключи.")
+    {
+        _import = import ?? throw new ArgumentNullException(nameof(import));
+        ImportCommand = new AsyncRelayCommand(ImportAsync, ReportFailure);
+    }
+
+    public string LinkText
+    {
+        get => _linkText;
+        set => SetProperty(ref _linkText, value);
+    }
+
+    public string? Message
+    {
+        get => _message;
+        private set => SetProperty(ref _message, value);
+    }
+
+    public ICommand ImportCommand { get; }
+
+    public void ReportInvalidLink() =>
+        Message = "Поддерживается только публичная ссылка vk.ru вида /video-{owner}_{video}.";
+
+    public void ReportOpened() =>
+        Message = "Видео открыто во встроенном плеере. Если VK ограничивает доступ, используйте кнопку системного браузера.";
+
+    private async Task ImportAsync(CancellationToken cancellationToken)
+    {
+        Message = null;
+        if (string.IsNullOrWhiteSpace(LinkText))
+        {
+            ReportInvalidLink();
+            return;
+        }
+
+        await _import(LinkText.Trim(), cancellationToken);
+    }
+
+    private void ReportFailure(Exception exception) =>
+        Message = "Не удалось открыть ссылку. Проверьте адрес и повторите попытку.";
+}
+
 public abstract class LocalDataPageViewModel(string title, string description) : PageViewModel(title, description)
 {
     private bool _isLoading;

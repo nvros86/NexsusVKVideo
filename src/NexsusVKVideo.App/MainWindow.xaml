@@ -50,6 +50,24 @@
                 <Border Margin="0,24,0,0" Padding="16" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="12"><TextBlock Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding ActionHint}" TextWrapping="Wrap" /></Border>
             </StackPanel></Grid>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ImportPageViewModel}">
+            <Grid Margin="24"><StackPanel MaxWidth="720" VerticalAlignment="Center">
+                <TextBlock FontSize="28" FontWeight="SemiBold" Text="{Binding Title}" />
+                <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding Description}" TextWrapping="Wrap" />
+                <Border Margin="0,24,0,0" Padding="20" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="12">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="Публичная ссылка" />
+                        <TextBox Margin="0,10,0,0" Height="42" AutomationProperties.Name="Публичная ссылка VK Video" Padding="12,8" Text="{Binding LinkText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Например: https://vk.ru/video-22822305_456241864">
+                            <TextBox.InputBindings><KeyBinding Key="Enter" Command="{Binding ImportCommand}" /></TextBox.InputBindings>
+                        </TextBox>
+                        <Button Margin="0,12,0,0" Padding="12,8" HorizontalAlignment="Left" AutomationProperties.Name="Открыть ссылку VK Video" Command="{Binding ImportCommand}" Content="Открыть во встроенном плеере" />
+                        <TextBlock Margin="0,12,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="Пример: https://vk.ru/video-22822305_456241864" TextWrapping="Wrap" />
+                        <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="Никакой API-ключ, токен или cookie в приложение не передаётся." TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <TextBlock Margin="0,16,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding Message}" TextWrapping="Wrap" />
+            </StackPanel></Grid>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:LibraryPageViewModel}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="24">
@@ -133,7 +151,7 @@
         </Border>
         <Grid Grid.Column="1"><Grid.RowDefinitions><RowDefinition Height="76" /><RowDefinition Height="*" /></Grid.RowDefinitions>
             <Border Grid.Row="0" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1"><Grid Margin="24,18"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" Height="40" IsReadOnly="True" AutomationProperties.Name="Поиск видео" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Border}" Foreground="{DynamicResource Brush.TextSecondary}" Padding="12,8" Text="Поиск станет доступен после подключения документированного провайдера" ToolTip="Поиск ещё не выполняет сетевые запросы." />
+                <TextBox Grid.Column="0" Height="40" IsReadOnly="True" AutomationProperties.Name="Импорт публичной ссылки VK Video" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Border}" Foreground="{DynamicResource Brush.TextSecondary}" Padding="12,8" Text="Открывайте публичные ссылки VK Video без API-ключей" ToolTip="В разделе «Поиск» поддерживается импорт публичной ссылки VK Video." />
                 <TextBlock Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" Text="Гость" />
             </Grid></Border>
             <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" />

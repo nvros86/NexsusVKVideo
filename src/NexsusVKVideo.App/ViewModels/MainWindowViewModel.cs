@@ -5,6 +5,7 @@ using NexsusVKVideo.App.Models;
 using NexsusVKVideo.App.Services;
 using NexsusVKVideo.Core.Contracts;
 using NexsusVKVideo.Core.Models;
+using NexsusVKVideo.Infrastructure.Vk;
 
 namespace NexsusVKVideo.App.ViewModels;
 
@@ -14,8 +15,10 @@ public sealed class MainWindowViewModel : ObservableObject
     private readonly LibraryPageViewModel _libraryPage;
     private readonly FavoritesPageViewModel _favoritesPage;
     private readonly SettingsPageViewModel _settingsPage;
+    private readonly ImportPageViewModel _importPage;
     private readonly IHistoryRepository _historyRepository;
     private readonly IFavoritesRepository _favoritesRepository;
+    private readonly VkVideoLinkParser _vkVideoLinkParser;
     private readonly AsyncRelayCommand<DemoVideo> _openDemoCommand;
     private readonly AsyncRelayCommand<VideoSummary> _toggleFavoriteCommand;
     private NavigationItemViewModel? _selectedNavigation;
@@ -26,10 +29,12 @@ public sealed class MainWindowViewModel : ObservableObject
         IFavoritesRepository favoritesRepository,
         ISettingsStore settingsStore,
         IThemeService themeService,
-        IWebViewProfileResetScheduler webViewProfileResetScheduler)
+        IWebViewProfileResetScheduler webViewProfileResetScheduler,
+        VkVideoLinkParser vkVideoLinkParser)
     {
         _historyRepository = historyRepository ?? throw new ArgumentNullException(nameof(historyRepository));
         _favoritesRepository = favoritesRepository ?? throw new ArgumentNullException(nameof(favoritesRepository));
+        _vkVideoLinkParser = vkVideoLinkParser ?? throw new ArgumentNullException(nameof(vkVideoLinkParser));
         Player = new PlayerViewModel();
         _openDemoCommand = new AsyncRelayCommand<DemoVideo>(OpenDemoAsync, _ => Player.ReportDataFailure());
         _toggleFavoriteCommand = new AsyncRelayCommand<VideoSummary>(ToggleFavoriteAsync, _ => Player.ReportDataFailure());
@@ -39,6 +44,7 @@ public sealed class MainWindowViewModel : ObservableObject
         _libraryPage = new LibraryPageViewModel(_historyRepository);
         _favoritesPage = new FavoritesPageViewModel(_favoritesRepository);
         _settingsPage = new SettingsPageViewModel(settingsStore, _historyRepository, themeService, webViewProfileResetScheduler);
+        _importPage = new ImportPageViewModel(ImportVideoLinkAsync);
         Player.PropertyChanged += OnPlayerPropertyChanged;
         NavigationItems = new ObservableCollection<NavigationItemViewModel>
         {
@@ -108,6 +114,30 @@ public sealed class MainWindowViewModel : ObservableObject
         Player.SetFavorite(true);
     }
 
+    private async Task ImportVideoLinkAsync(string value, CancellationToken cancellationToken)
+    {
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri)
+            || !_vkVideoLinkParser.TryParse(uri, out var videoLink)
+            || videoLink is null)
+        {
+            _importPage.ReportInvalidLink();
+            return;
+        }
+
+        var video = new DemoVideo(
+            $"VK Video {videoLink.Key.VideoId}",
+            "Публичная ссылка VK Video",
+            "",
+            "Открыто по публичной ссылке. Метаданные не загружаются без документированного доступа к API.",
+            "VK VIDEO",
+            videoLink.EmbedUri,
+            videoLink.VideoPageUri,
+            new VideoSummary(videoLink.Key, $"VK Video {videoLink.Key.VideoId}"));
+
+        await OpenDemoAsync(video, cancellationToken);
+        _importPage.ReportOpened();
+    }
+
     private void OnPlayerPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(PlayerViewModel.CurrentVideo))
@@ -119,7 +149,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private PageViewModel CreatePage(string route) => route switch
     {
         "home" => _homePage,
-        "search" => new PlaceholderPageViewModel("Поиск", "Поиск будет добавлен после подтверждения документированного способа доступа к данным поставщика.", "API-запросы и live search не выполняются в демонстрационном каркасе."),
+        "search" => _importPage,
         "library" => LoadPage(_libraryPage),
         "favorites" => LoadPage(_favoritesPage),
         "ai" => new PlaceholderPageViewModel("AI Center", "Скоро", "AI-функции и фоновые запросы не выполняются."),
