@@ -1,6 +1,9 @@
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Interop;
 using Microsoft.Web.WebView2.Core;
+using Microsoft.Win32;
 using NexsusVKVideo.Infrastructure.Storage;
 using NexsusVKVideo.Infrastructure.Vk;
 
@@ -8,13 +11,45 @@ namespace NexsusVKVideo.App;
 
 public partial class MainWindow : Window
 {
+    private const int DwmUseImmersiveDarkMode = 20;
+    private const int DwmUseImmersiveDarkModeBeforeWindows10_2004 = 19;
     private static readonly Uri VkVideoHomeUri = new("https://vkvideo.ru/", UriKind.Absolute);
 
     public MainWindow()
     {
         InitializeComponent();
         FitInitialWindowToWorkArea();
+        SourceInitialized += OnSourceInitialized;
         Loaded += OnLoaded;
+    }
+
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        if (SystemParameters.HighContrast)
+        {
+            return;
+        }
+
+        var handle = new WindowInteropHelper(this).Handle;
+        if (handle == IntPtr.Zero)
+        {
+            return;
+        }
+
+        var useDarkMode = IsWindowsAppsDarkTheme() ? 1 : 0;
+        if (DwmSetWindowAttribute(handle, DwmUseImmersiveDarkMode, ref useDarkMode, sizeof(int)) != 0)
+        {
+            DwmSetWindowAttribute(handle, DwmUseImmersiveDarkModeBeforeWindows10_2004, ref useDarkMode, sizeof(int));
+        }
+    }
+
+    private static bool IsWindowsAppsDarkTheme()
+    {
+        var value = Registry.GetValue(
+            @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+            "AppsUseLightTheme",
+            1);
+        return value is int setting && setting == 0;
     }
 
     private void FitInitialWindowToWorkArea()
@@ -92,4 +127,7 @@ public partial class MainWindow : Window
         BrowserErrorText.Text = message;
         BrowserErrorPanel.Visibility = Visibility.Visible;
     }
+
+    [DllImport("dwmapi.dll", PreserveSig = true)]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int attributeValue, int attributeSize);
 }

@@ -6,9 +6,9 @@
 
 Затронутые компоненты: XAML главного окна.
 
-Результат: фон, текст и аварийное сообщение окна используют динамические `SystemColors.WindowBrushKey` и `SystemColors.WindowTextBrushKey`. WPF обновляет эти системные кисти при изменении цветовой схемы Windows. Содержимое сайта VK Video управляет своей темой самостоятельно.
+Результат: фон, текст и аварийное сообщение окна используют динамические `SystemColors.WindowBrushKey` и `SystemColors.WindowTextBrushKey`. При создании окна DWM получает значение системной настройки Windows `AppsUseLightTheme`, поэтому нативная строка заголовка использует светлый или тёмный режим приложений Windows. Заголовок окна — `NexsusVKVideo`. Производный `Assets/NexsusVKVideo.ico` создан из утверждённого брендового PNG без изменения исходника и подключён и к окну, и к ресурсу `.exe`. Содержимое сайта VK Video управляет своей темой самостоятельно.
 
-Проверки: `dotnet build NexsusVKVideo.sln -c Release --no-restore -m:1` — успешно, 0 warnings/0 errors; `dotnet test NexsusVKVideo.sln -c Release --no-build -m:1` — успешно, 32/32. Ручная проверка: переключить системную цветовую схему Windows и вызвать аварийное состояние WebView2.
+Проверки: `dotnet build NexsusVKVideo.sln -c Release --no-restore -m:1` — успешно, 0 warnings/0 errors; `dotnet test NexsusVKVideo.sln -c Release --no-build -m:1` — успешно, 32/32. Ручная проверка: запустить обновлённый `.exe`, проверить заголовок и icon, затем переключить системную цветовую схему Windows и перезапустить приложение.
 
 Миграция/совместимость: данных и профиля WebView2 не изменяет.
 
