@@ -27,6 +27,7 @@ public partial class MainWindow : Window
         _viewModel.Player.PropertyChanged += OnPlayerPropertyChanged;
         _viewModel.Player.BrowserRequested += OnBrowserRequested;
         _viewModel.BrowserRequested += OnVkVideoBrowserRequested;
+        _browserHomeRequested = _viewModel.IsBrowserMode;
     }
 
     private void FitInitialWindowToWorkArea()
@@ -182,14 +183,6 @@ public partial class MainWindow : Window
         }
 
         ReportBrowserNavigationFailure("Новое окно заблокировано: разрешены только защищённые сайты VK.");
-    }
-
-    private void OnReloadBrowserClick(object sender, RoutedEventArgs e)
-    {
-        if (_browserWebViewInitialized)
-        {
-            BrowserWebView.CoreWebView2?.Reload();
-        }
     }
 
     private void ReportBrowserNavigationFailure(string message)

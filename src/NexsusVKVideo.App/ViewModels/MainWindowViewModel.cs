@@ -60,7 +60,8 @@ public sealed class MainWindowViewModel : ObservableObject
         };
 
         _currentPage = _homePage;
-        _selectedNavigation = NavigationItems[0];
+        _selectedNavigation = NavigationItems[1];
+        CurrentPage = _vkVideoBrowserPage;
     }
 
     public string Title => "NexsusVKVideo";

@@ -139,7 +139,7 @@
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions><ColumnDefinition Width="224" /><ColumnDefinition Width="*" /><ColumnDefinition Width="400" /></Grid.ColumnDefinitions>
-        <Border Grid.Column="0" Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,1,0">
+        <Border Grid.Column="0" Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,1,0" Visibility="{Binding IsMainShellVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid Margin="16"><Grid.RowDefinitions><RowDefinition Height="80" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                 <StackPanel Grid.Row="0"><TextBlock FontSize="24" FontWeight="SemiBold"><Run Text="Nexsus" /><Run Foreground="{DynamicResource Brush.Accent}" Text="VK" /><Run Text="Video" /></TextBlock><TextBlock Margin="0,6,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="Этап 0.2" /></StackPanel>
                 <ListBox Grid.Row="1" AutomationProperties.Name="Навигация" ItemsSource="{Binding NavigationItems}" SelectedItem="{Binding SelectedNavigation, Mode=TwoWay}" Style="{StaticResource NavigationListStyle}">
@@ -168,14 +168,10 @@
                 <Button Margin="0,12,0,0" Padding="12,8" Command="{Binding Player.ClearCommand}" Content="Закрыть сценарий" />
             </StackPanel>
         </Border>
-        <Border Grid.Column="1" Grid.ColumnSpan="2" Background="{DynamicResource Brush.Background}" Visibility="{Binding IsBrowserMode, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <Grid><Grid.RowDefinitions><RowDefinition Height="76" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                <Border Grid.Row="0" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1"><Grid Margin="24,18"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                    <TextBlock VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Text="VK Video — официальный сайт" />
-                    <Button Grid.Column="1" Padding="12,8" Click="OnReloadBrowserClick" Content="Обновить" />
-                </Grid></Border>
-                <wv2:WebView2 x:Name="BrowserWebView" Grid.Row="1" />
-                <TextBlock Grid.Row="2" Margin="24,8" Foreground="{DynamicResource Brush.Error}" Text="{Binding CurrentPage.Message}" TextWrapping="Wrap" />
+        <Border Grid.Column="0" Grid.ColumnSpan="3" Background="{DynamicResource Brush.Background}" Visibility="{Binding IsBrowserMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid><Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <wv2:WebView2 x:Name="BrowserWebView" Grid.Row="0" />
+                <TextBlock Grid.Row="1" Margin="24,8" Foreground="{DynamicResource Brush.Error}" Text="{Binding CurrentPage.Message}" TextWrapping="Wrap" />
             </Grid>
         </Border>
     </Grid>
