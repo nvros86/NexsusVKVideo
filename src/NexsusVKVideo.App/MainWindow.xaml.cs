@@ -1,4 +1,5 @@
 using System.IO;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
@@ -14,10 +15,12 @@ public partial class MainWindow : Window
     private const int DwmUseImmersiveDarkMode = 20;
     private const int DwmUseImmersiveDarkModeBeforeWindows10_2004 = 19;
     private static readonly Uri VkVideoHomeUri = new("https://vkvideo.ru/", UriKind.Absolute);
+    private static readonly Uri WebView2RuntimeDownloadUri = new("https://developer.microsoft.com/microsoft-edge/webview2/", UriKind.Absolute);
     private WindowState _windowStateBeforeFullScreen;
     private WindowStyle _windowStyleBeforeFullScreen;
     private ResizeMode _resizeModeBeforeFullScreen;
     private bool _isWebViewFullScreen;
+    private bool _isBrowserInitializing;
 
     public MainWindow()
     {
@@ -74,26 +77,56 @@ public partial class MainWindow : Window
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
+        await InitializeBrowserAsync();
+    }
+
+    private async Task InitializeBrowserAsync()
+    {
+        if (_isBrowserInitializing)
+        {
+            return;
+        }
+
+        _isBrowserInitializing = true;
         try
         {
+            HideError();
+
+            if (BrowserWebView.CoreWebView2 is not null)
+            {
+                BrowserWebView.CoreWebView2.Navigate(VkVideoHomeUri.AbsoluteUri);
+                return;
+            }
+
             var userDataFolder = ApplicationDataPaths.GetWebViewUserDataPath();
             Directory.CreateDirectory(userDataFolder);
 
             var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: userDataFolder);
             await BrowserWebView.EnsureCoreWebView2Async(environment);
-            BrowserWebView.CoreWebView2.NavigationStarting += OnNavigationStarting;
-            BrowserWebView.CoreWebView2.NavigationCompleted += OnNavigationCompleted;
-            BrowserWebView.CoreWebView2.NewWindowRequested += OnNewWindowRequested;
-            BrowserWebView.CoreWebView2.ContainsFullScreenElementChanged += OnContainsFullScreenElementChanged;
-            BrowserWebView.CoreWebView2.Navigate(VkVideoHomeUri.AbsoluteUri);
+            var coreWebView2 = BrowserWebView.CoreWebView2;
+            if (coreWebView2 is null)
+            {
+                ShowError("Не удалось подготовить встроенный браузер. Повторите попытку.");
+                return;
+            }
+
+            coreWebView2.NavigationStarting += OnNavigationStarting;
+            coreWebView2.NavigationCompleted += OnNavigationCompleted;
+            coreWebView2.NewWindowRequested += OnNewWindowRequested;
+            coreWebView2.ContainsFullScreenElementChanged += OnContainsFullScreenElementChanged;
+            coreWebView2.Navigate(VkVideoHomeUri.AbsoluteUri);
         }
         catch (WebView2RuntimeNotFoundException)
         {
-            ShowError("Среда выполнения Microsoft Edge WebView2 не найдена. Установите Evergreen Runtime и откройте приложение снова.");
+            ShowError("Среда выполнения Microsoft Edge WebView2 не найдена. Установите Evergreen Runtime, затем нажмите «Повторить».");
         }
         catch (Exception)
         {
             ShowError("Не удалось открыть VK Video. Проверьте подключение к интернету и повторите попытку.");
+        }
+        finally
+        {
+            _isBrowserInitializing = false;
         }
     }
 
@@ -113,7 +146,10 @@ public partial class MainWindow : Window
         if (!e.IsSuccess)
         {
             ShowError($"VK Video не загрузился ({e.WebErrorStatus}). Проверьте подключение к интернету.");
+            return;
         }
+
+        HideError();
     }
 
     private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
@@ -174,6 +210,18 @@ public partial class MainWindow : Window
     {
         BrowserErrorText.Text = message;
         BrowserErrorPanel.Visibility = Visibility.Visible;
+    }
+
+    private void HideError() => BrowserErrorPanel.Visibility = Visibility.Collapsed;
+
+    private async void OnRetryClicked(object sender, RoutedEventArgs e)
+    {
+        await InitializeBrowserAsync();
+    }
+
+    private void OnInstallWebView2Clicked(object sender, RoutedEventArgs e)
+    {
+        Process.Start(new ProcessStartInfo(WebView2RuntimeDownloadUri.AbsoluteUri) { UseShellExecute = true });
     }
 
     private void OnClosed(object? sender, EventArgs e)

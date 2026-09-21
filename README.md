@@ -1,8 +1,10 @@
 # NexsusVKVideo
 
-`v0.1.0-beta.1` — Windows-оболочка официального сайта VK Video. После запуска приложение открывает `vkvideo.ru` во встроенном WebView2; каталог, поиск, вход и воспроизведение предоставляет сам сайт VK.
+`v0.1.1-beta.1` — Windows-оболочка официального сайта VK Video. После запуска приложение открывает `vkvideo.ru` во встроенном WebView2; каталог, поиск, вход и воспроизведение предоставляет сам сайт VK.
 
 Для запуска требуется Windows x64, подключение к интернету и установленный [Microsoft Edge WebView2 Evergreen Runtime](https://developer.microsoft.com/microsoft-edge/webview2/). Beta не подписана и не содержит installer.
+
+Если Runtime отсутствует или VK Video временно недоступен, приложение показывает экран восстановления: можно повторить загрузку или открыть официальную страницу установки WebView2 в системном браузере.
 
 ## Быстрый старт
 1. Распакуйте содержимое ZIP прямо в корень пустого репозитория: рядом должны оказаться AGENTS.md, src/, docs/ и .github/.
@@ -16,6 +18,7 @@
 - [Development prompt](NexsusVKVideo_Development_Prompt.md) — продуктовые требования.
 - [Архитектура](docs/ARCHITECTURE.md), [модули](docs/MODULES.md), [roadmap](docs/ROADMAP.md).
 - [Дизайн](docs/DESIGN_IMPLEMENTATION_GUIDE.md) и assets/mockups/MainWindow_Mockup.png.
+- [План развития версий](docs/FEATURE_ROADMAP.md).
 - [Рабочий процесс](CODEX_WORKFLOW.md), [безопасность](SECURITY.md), [релизы](RELEASE_PROCESS.md).
 - [Состав и ограничения](docs/PACKAGE_STATUS.md).
 
