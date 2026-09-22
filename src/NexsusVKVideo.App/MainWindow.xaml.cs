@@ -155,6 +155,7 @@ public partial class MainWindow : Window
             coreWebView2.NavigationStarting += OnNavigationStarting;
             coreWebView2.NavigationCompleted += OnNavigationCompleted;
             coreWebView2.NewWindowRequested += OnNewWindowRequested;
+            coreWebView2.DownloadStarting += OnDownloadStarting;
             coreWebView2.ContainsFullScreenElementChanged += OnContainsFullScreenElementChanged;
             coreWebView2.Navigate(VkVideoHomeUri.AbsoluteUri);
         }
@@ -203,7 +204,35 @@ public partial class MainWindow : Window
             return;
         }
 
-        ShowError("Новое окно заблокировано: приложение открывает только защищённые сайты VK.");
+        if (!Uri.TryCreate(e.Uri, UriKind.Absolute, out target)
+            || target.Scheme != Uri.UriSchemeHttps)
+        {
+            ShowError("Новое окно заблокировано: неподдерживаемая ссылка.");
+            return;
+        }
+
+        var result = MessageBox.Show(
+            "Эта ссылка ведёт за пределы VK. Открыть её в системном браузере?",
+            "Внешняя ссылка",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question,
+            MessageBoxResult.No);
+        if (result == MessageBoxResult.Yes)
+        {
+            Process.Start(new ProcessStartInfo(target.AbsoluteUri) { UseShellExecute = true });
+        }
+    }
+
+    private void OnDownloadStarting(object? sender, CoreWebView2DownloadStartingEventArgs e)
+    {
+        if (Uri.TryCreate(e.DownloadOperation.Uri, UriKind.Absolute, out var source)
+            && VkEmbedUriValidator.IsAllowedVkSite(source))
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        ShowError("Загрузка заблокирована: её источник не является защищённым сайтом VK.");
     }
 
     private void OnContainsFullScreenElementChanged(object? sender, object e)
@@ -370,6 +399,10 @@ public partial class MainWindow : Window
 
         if (BrowserWebView.CoreWebView2 is not null)
         {
+            BrowserWebView.CoreWebView2.NavigationStarting -= OnNavigationStarting;
+            BrowserWebView.CoreWebView2.NavigationCompleted -= OnNavigationCompleted;
+            BrowserWebView.CoreWebView2.NewWindowRequested -= OnNewWindowRequested;
+            BrowserWebView.CoreWebView2.DownloadStarting -= OnDownloadStarting;
             BrowserWebView.CoreWebView2.ContainsFullScreenElementChanged -= OnContainsFullScreenElementChanged;
         }
     }
