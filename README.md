@@ -1,10 +1,45 @@
 # NexsusVKVideo
 
-`v0.1.5-beta.1` — Windows-оболочка официального сайта VK Video. После запуска приложение открывает `vkvideo.ru` во встроенном WebView2; каталог, поиск, вход и воспроизведение предоставляет сам сайт VK.
+[![Build](https://github.com/nvros86/NexsusVKVideo/actions/workflows/build.yml/badge.svg)](https://github.com/nvros86/NexsusVKVideo/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/nvros86/NexsusVKVideo?include_prereleases&label=beta)](https://github.com/nvros86/NexsusVKVideo/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Для запуска требуется Windows x64, подключение к интернету и установленный [Microsoft Edge WebView2 Evergreen Runtime](https://developer.microsoft.com/microsoft-edge/webview2/). Beta не подписана. Установщик создаёт ярлыки и предлагает открыть официальную страницу Runtime, если компонент отсутствует.
+NexsusVKVideo — лёгкая Windows-оболочка на WPF и WebView2 для официального сайта [VK Video](https://vkvideo.ru/). Она открывает сайт VK Video в отдельном окне приложения, сохраняя привычные возможности самого сайта: вход, каталог, поиск и воспроизведение.
 
-Если Runtime отсутствует или VK Video временно недоступен, приложение показывает экран восстановления: можно повторить загрузку или открыть официальную страницу установки WebView2 в системном браузере.
+> Это не неофициальный клиент VK API. Приложение не получает пароль, cookies или токены VK и не обходит DRM, авторизацию либо ограничения сайта.
+
+![NexsusVKVideo: официальный сайт VK Video в окне Windows](assets/screenshots/NexsusVKVideo-v0.2.0-beta.1.png)
+
+_Скриншот сделан в `v0.2.0-beta.1` со свежим неавторизованным профилем WebView2. Контент внутри окна загружается непосредственно с официального сайта VK Video и принадлежит соответствующим правообладателям._
+
+## Скачать
+
+Актуальная beta-версия: [v0.2.0-beta.1](https://github.com/nvros86/NexsusVKVideo/releases/tag/v0.2.0-beta.1).
+
+| Файл | Для чего |
+|---|---|
+| [NexsusVKVideo-Setup-0.2.0-beta.1.exe](https://github.com/nvros86/NexsusVKVideo/releases/download/v0.2.0-beta.1/NexsusVKVideo-Setup-0.2.0-beta.1.exe) | Рекомендуемый per-user установщик Windows x64. |
+| [NexsusVKVideo.App.exe](https://github.com/nvros86/NexsusVKVideo/releases/download/v0.2.0-beta.1/NexsusVKVideo.App.exe) | Один standalone EXE без установки. |
+
+Оба файла beta-версии пока не имеют цифровой подписи. Перед запуском сверяйте SHA-256 со значениями на [странице релиза](https://github.com/nvros86/NexsusVKVideo/releases/tag/v0.2.0-beta.1). Подписанный выпуск требует отдельного сертификата code signing.
+
+## Возможности
+
+- Официальный `vkvideo.ru` в собственном окне Windows, без отдельного браузера.
+- Системная светлая/тёмная тема, восстановление размера и положения окна, корректная работа с несколькими мониторами.
+- Полноэкранное видео WebView2.
+- Восстановление запуска при отсутствии WebView2 Runtime или сетевой ошибке.
+- Безопасные внешние HTTPS-ссылки — только после подтверждения в системном браузере.
+- Загрузки только с защищённых доменов VK.
+- Локальная диагностика, очистка профиля по явному действию и безопасная проверка обновлений.
+
+## Требования
+
+- Windows x64.
+- Интернет-подключение.
+- [Microsoft Edge WebView2 Evergreen Runtime](https://developer.microsoft.com/microsoft-edge/webview2/).
+
+Установщик не требует прав администратора. Если WebView2 Runtime отсутствует, приложение покажет ссылку на официальную страницу Microsoft.
 
 ## Горячие клавиши
 
@@ -12,52 +47,49 @@
 |---|---|
 | `Alt+←` / `Alt+→` | Назад / вперёд по истории VK Video |
 | `F5` или `Ctrl+R` | Обновить текущую страницу |
-| `Ctrl++` / `Ctrl+-` | Увеличить / уменьшить масштаб страницы |
-| `Ctrl+0` | Вернуть масштаб 100% |
+| `Ctrl++` / `Ctrl+-` / `Ctrl+0` | Изменить масштаб / вернуть 100% |
 | `Ctrl+Shift+Delete` | Запланировать очистку локальных данных WebView2 при следующем запуске |
+| `Ctrl+Shift+D` | Показать локальный диагностический отчёт |
+| `Ctrl+Shift+U` | Проверить более новую опубликованную beta-версию |
 
-Очистка локальных данных всегда требует подтверждения. При следующем старте будут удалены cookies, активный вход и настройки сайта VK Video; для продолжения потребуется войти снова.
+Очистка всегда требует подтверждения. Она удаляет локальные cookies, активный вход и настройки сайта VK Video при следующем запуске; приложение не экспортирует эти данные.
 
-## Внешние ссылки и загрузки
+## Конфиденциальность и безопасность
 
-NexsusVKVideo остаётся внутри защищённых доменов VK. Внешняя HTTPS-ссылка требует подтверждения и открывается только системным браузером; HTTP и произвольные схемы не выполняются. Загрузка допускается только с защищённого домена VK и использует стандартное окно WebView2 — приложение не выбирает путь и не запускает скачанный файл.
+- Верхнеуровневая навигация ограничена HTTPS-доменами VK.
+- HTTP и неподдерживаемые схемы не выполняются.
+- Внешние ссылки никогда не запускаются молча.
+- Диагностический отчёт не содержит URL, историю, cookies, учётные данные или локальные пути и не отправляется по сети.
 
-## Локальная диагностика
+Подробности: [SECURITY.md](SECURITY.md).
 
-`Ctrl+Shift+D` выводит версию приложения, WebView2 Runtime и Windows. Отчёт можно по желанию скопировать в буфер обмена, но он не передаётся по сети и не содержит URL, историю, cookies, учётные данные или пути к файлам.
+## Для разработчиков
 
-## Обновления
+Нужен .NET SDK `10.0.401`, закреплённый в [global.json](global.json).
 
-`Ctrl+Shift+U` запрашивает список публичных релизов `nvros86/NexsusVKVideo` у GitHub и показывает только более новую версию beta-канала. При её наличии пользователь сам решает открыть страницу релиза в системном браузере. Автоустановка намеренно не реализована до появления цифровой подписи релизных файлов.
+```powershell
+dotnet restore NexsusVKVideo.sln
+dotnet build NexsusVKVideo.sln -c Release --no-restore
+dotnet test NexsusVKVideo.sln -c Release --no-build
+```
 
-## Состояние окна
+Сборка установщика с Inno Setup 7:
 
-Приложение локально сохраняет положение, размер и развёрнутое состояние окна в `%LocalAppData%\NexsusVKVideo\window-placement.json`. Если сохранённый монитор отключён, окно корректируется так, чтобы его можно было вернуть на доступный экран.
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/Build-Installer.ps1
+```
 
-Заголовок окна следует системной светлой или тёмной теме Windows и сохраняет режим высокой контрастности. WPF и WebView2 обрабатывают DPI и полноэкранное видео; изменение подключённых мониторов не должно оставлять обычное окно за пределами рабочего стола.
+Workflow `publish beta release` повторяет restore, build и test на GitHub Actions, затем собирает installer и standalone EXE для уже созданного tag.
 
-## Сборка установщика
+## Документация
 
-Установщик создаётся для версии из файла проекта с помощью Inno Setup 7 и не требует административных прав: `powershell -ExecutionPolicy Bypass -File scripts/Build-Installer.ps1`. Результат будет в `artifacts/installer/`. При необходимости версия явно передаётся как `-Version 0.2.0-beta.1`. Скрипт сначала публикует single-file EXE, затем упаковывает его в `NexsusVKVideo-Setup-<версия>.exe`. Для проверенного beta-выпуска workflow `publish beta release` повторяет restore, build и test, собирает оба файла на GitHub Actions и публикует их только после успешных проверок.
+- [Изменения](CHANGELOG.md) и [план версий](docs/FEATURE_ROADMAP.md).
+- [Архитектура](docs/ARCHITECTURE.md), [модули](docs/MODULES.md) и [решения](docs/decisions/README.md).
+- [Сборка, проверка и release-процесс](CODEX_WORKFLOW.md), [RELEASE_PROCESS.md](RELEASE_PROCESS.md).
+- [Как участвовать](CONTRIBUTING.md), [политика безопасности](SECURITY.md), [поддержка](SUPPORT.md).
 
-## Быстрый старт
-1. Распакуйте содержимое ZIP прямо в корень пустого репозитория: рядом должны оказаться AGENTS.md, src/, docs/ и .github/.
-2. Откройте эту папку в Codex. Для разработки установите Git и .NET SDK 10.0.401 с Windows desktop tooling; версия закреплена в global.json.
-3. Выполните проверки: `dotnet restore NexsusVKVideo.sln`, затем build и test из раздела ниже. Для single-file публикации: `dotnet publish src/NexsusVKVideo.App/NexsusVKVideo.App.csproj -c Release -p:PublishProfile=win-x64-single-file`.
-4. Для GitHub следуйте [GITHUB_SETUP.md](GITHUB_SETUP.md).
-5. Сборка будущего каркаса: dotnet restore NexsusVKVideo.sln; dotnet build NexsusVKVideo.sln -c Release --no-restore; dotnet test NexsusVKVideo.sln -c Release --no-build.
-Команды выполняются по очереди. CI требует solution, global.json, исходный и тестовый проекты.
-
-## Материалы
-- [Development prompt](NexsusVKVideo_Development_Prompt.md) — продуктовые требования.
-- [Архитектура](docs/ARCHITECTURE.md), [модули](docs/MODULES.md), [roadmap](docs/ROADMAP.md).
-- [Дизайн](docs/DESIGN_IMPLEMENTATION_GUIDE.md) и assets/mockups/MainWindow_Mockup.png.
-- [План развития версий](docs/FEATURE_ROADMAP.md).
-- [Рабочий процесс](CODEX_WORKFLOW.md), [безопасность](SECURITY.md), [релизы](RELEASE_PROCESS.md).
-- [Состав и ограничения](docs/PACKAGE_STATUS.md).
-
-Логотип, предоставленный пользователем, включён без изменения в assets/branding; происхождение указано в README этой папки.
+Логотип был предоставлен владельцем проекта; происхождение описано в [assets/branding/README.md](assets/branding/README.md).
 
 ## Лицензия
 
-Исходный код и материалы репозитория распространяются по [лицензии MIT](LICENSE). Copyright (c) 2026 nvros86.
+Исходный код, документация и оригинальные assets проекта распространяются по [лицензии MIT](LICENSE). Copyright (c) 2026 nvros86. Для элементов, принадлежащих третьим лицам, действуют [отдельные notices](NOTICE.md).

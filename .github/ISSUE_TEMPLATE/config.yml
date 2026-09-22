@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/nvros86/NexsusVKVideo/security/advisories/new
+    about: Report a potential security vulnerability privately when GitHub private vulnerability reporting is available.
+  - name: Support and troubleshooting
+    url: https://github.com/nvros86/NexsusVKVideo/blob/main/SUPPORT.md
+    about: Read the support guide before opening an issue.
