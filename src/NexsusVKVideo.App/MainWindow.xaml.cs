@@ -1,5 +1,6 @@
 using System.IO;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
@@ -300,6 +301,13 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && key == Key.D)
+        {
+            ShowDiagnostics();
+            e.Handled = true;
+            return;
+        }
+
         if (coreWebView2 is null)
         {
             return;
@@ -384,6 +392,32 @@ public partial class MainWindow : Window
             ShowError("Не удалось запланировать очистку локальных данных. Повторите попытку.");
         }
     }
+
+    private void ShowDiagnostics()
+    {
+        var report = string.Join(Environment.NewLine,
+            "NexsusVKVideo — локальная диагностика",
+            $"Версия приложения: {GetApplicationVersion()}",
+            $"WebView2 Runtime: {BrowserWebView.CoreWebView2?.Environment.BrowserVersionString ?? "не инициализирован"}",
+            $"Windows: {Environment.OSVersion.VersionString}",
+            "Телеметрия: отключена",
+            "В отчёт не включаются адреса страниц, история, cookies, учётные данные и пути к файлам.");
+        var result = MessageBox.Show(
+            $"{report}{Environment.NewLine}{Environment.NewLine}Скопировать отчёт в буфер обмена?",
+            "Диагностика",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Information,
+            MessageBoxResult.No);
+        if (result == MessageBoxResult.Yes)
+        {
+            Clipboard.SetText(report);
+        }
+    }
+
+    private static string GetApplicationVersion() =>
+        typeof(MainWindow).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+        ?? typeof(MainWindow).Assembly.GetName().Version?.ToString()
+        ?? "неизвестно";
 
     private void EnterWebViewFullScreen()
     {
