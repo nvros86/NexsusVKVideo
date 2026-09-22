@@ -44,7 +44,7 @@ jobs:
           $version = $env:RELEASE_TAG.TrimStart('v')
           $compiler = Get-ChildItem 'C:\Program Files (x86)\Inno Setup*\ISCC.exe', 'C:\Program Files\Inno Setup*\ISCC.exe' -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
           if ([string]::IsNullOrWhiteSpace($compiler)) { throw 'Inno Setup compiler was not installed.' }
-          ./scripts/Build-Installer.ps1 -Version $version -SkipRestore -InnoSetupCompiler $compiler
+          ./scripts/Build-Installer.ps1 -Version $version -InnoSetupCompiler $compiler
 
       - name: Upload and publish prerelease
         shell: pwsh
