@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Input;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Win32;
 using NexsusVKVideo.Infrastructure.Storage;
@@ -14,6 +15,10 @@ public partial class MainWindow : Window
 {
     private const int DwmUseImmersiveDarkMode = 20;
     private const int DwmUseImmersiveDarkModeBeforeWindows10_2004 = 19;
+    private const double DefaultZoomFactor = 1.0;
+    private const double MinimumZoomFactor = 0.5;
+    private const double MaximumZoomFactor = 3.0;
+    private const double ZoomStepMultiplier = 1.1;
     private static readonly Uri VkVideoHomeUri = new("https://vkvideo.ru/", UriKind.Absolute);
     private static readonly Uri WebView2RuntimeDownloadUri = new("https://developer.microsoft.com/microsoft-edge/webview2/", UriKind.Absolute);
     private WindowState _windowStateBeforeFullScreen;
@@ -29,6 +34,7 @@ public partial class MainWindow : Window
         SourceInitialized += OnSourceInitialized;
         Loaded += OnLoaded;
         Closed += OnClosed;
+        PreviewKeyDown += OnPreviewKeyDown;
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
@@ -174,6 +180,66 @@ public partial class MainWindow : Window
 
         ExitWebViewFullScreen();
     }
+
+    private void OnPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        var coreWebView2 = BrowserWebView.CoreWebView2;
+        if (coreWebView2 is null)
+        {
+            return;
+        }
+
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        var modifiers = Keyboard.Modifiers;
+
+        if (modifiers == ModifierKeys.Alt && key == Key.Left && coreWebView2.CanGoBack)
+        {
+            coreWebView2.GoBack();
+            e.Handled = true;
+            return;
+        }
+
+        if (modifiers == ModifierKeys.Alt && key == Key.Right && coreWebView2.CanGoForward)
+        {
+            coreWebView2.GoForward();
+            e.Handled = true;
+            return;
+        }
+
+        if ((modifiers == ModifierKeys.None && key == Key.F5) || (modifiers == ModifierKeys.Control && key == Key.R))
+        {
+            coreWebView2.Reload();
+            e.Handled = true;
+            return;
+        }
+
+        if (modifiers != ModifierKeys.Control)
+        {
+            return;
+        }
+
+        switch (key)
+        {
+            case Key.Add:
+            case Key.OemPlus:
+                SetZoomFactor(BrowserWebView.ZoomFactor * ZoomStepMultiplier);
+                e.Handled = true;
+                break;
+            case Key.Subtract:
+            case Key.OemMinus:
+                SetZoomFactor(BrowserWebView.ZoomFactor / ZoomStepMultiplier);
+                e.Handled = true;
+                break;
+            case Key.D0:
+            case Key.NumPad0:
+                SetZoomFactor(DefaultZoomFactor);
+                e.Handled = true;
+                break;
+        }
+    }
+
+    private void SetZoomFactor(double zoomFactor) =>
+        BrowserWebView.ZoomFactor = Math.Clamp(zoomFactor, MinimumZoomFactor, MaximumZoomFactor);
 
     private void EnterWebViewFullScreen()
     {
