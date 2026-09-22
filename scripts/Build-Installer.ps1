@@ -1,7 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidatePattern('^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.1.2-beta.1',
+    [string]$Version,
     [string]$Configuration = 'Release',
     [string]$InnoSetupCompiler = "$env:ProgramFiles\Inno Setup 7\ISCC.exe",
     [switch]$SkipRestore
@@ -10,6 +9,16 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $projectPath = Join-Path $repoRoot 'src\NexsusVKVideo.App\NexsusVKVideo.App.csproj'
+
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    [xml]$project = Get-Content -LiteralPath $projectPath
+    $Version = [string]$project.Project.PropertyGroup.Version
+}
+
+if ($Version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') {
+    throw "Version must use the form X.Y.Z or X.Y.Z-prerelease: $Version"
+}
+
 $publishDirectory = Join-Path $repoRoot "artifacts\publish\$Version"
 $installerDirectory = Join-Path $repoRoot 'artifacts\installer'
 $installerScript = Join-Path $repoRoot 'installer\NexsusVKVideo.iss'

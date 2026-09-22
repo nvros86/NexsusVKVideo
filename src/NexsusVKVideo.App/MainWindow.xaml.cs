@@ -308,6 +308,13 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && key == Key.U)
+        {
+            CheckForUpdates();
+            e.Handled = true;
+            return;
+        }
+
         if (coreWebView2 is null)
         {
             return;
@@ -418,6 +425,43 @@ public partial class MainWindow : Window
         typeof(MainWindow).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
         ?? typeof(MainWindow).Assembly.GetName().Version?.ToString()
         ?? "неизвестно";
+
+    private async void CheckForUpdates()
+    {
+        try
+        {
+            var currentVersion = GetApplicationVersion();
+            var release = await new ReleaseUpdateService().GetNewerReleaseAsync(currentVersion, CancellationToken.None);
+            if (release is null)
+            {
+                MessageBox.Show(
+                    "Для этого beta-канала более новой опубликованной версии не найдено.",
+                    "Проверка обновлений",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Доступна версия {release.TagName}. Открыть её страницу на GitHub в системном браузере?",
+                "Проверка обновлений",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Information,
+                MessageBoxResult.No);
+            if (result == MessageBoxResult.Yes)
+            {
+                Process.Start(new ProcessStartInfo(release.ReleasePage.AbsoluteUri) { UseShellExecute = true });
+            }
+        }
+        catch (Exception)
+        {
+            MessageBox.Show(
+                "Не удалось проверить обновления. Проверьте подключение к интернету и повторите попытку.",
+                "Проверка обновлений",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
 
     private void EnterWebViewFullScreen()
     {
