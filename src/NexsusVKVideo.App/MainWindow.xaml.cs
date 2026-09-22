@@ -39,27 +39,68 @@ public partial class MainWindow : Window
         Loaded += OnLoaded;
         Closed += OnClosed;
         PreviewKeyDown += OnPreviewKeyDown;
+        SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
+        SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+        SystemEvents.PowerModeChanged += OnPowerModeChanged;
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
-        if (!SystemParameters.HighContrast)
-        {
-            var handle = new WindowInteropHelper(this).Handle;
-            if (handle != IntPtr.Zero)
-            {
-                var useDarkMode = IsWindowsAppsDarkTheme() ? 1 : 0;
-                if (DwmSetWindowAttribute(handle, DwmUseImmersiveDarkMode, ref useDarkMode, sizeof(int)) != 0)
-                {
-                    DwmSetWindowAttribute(handle, DwmUseImmersiveDarkModeBeforeWindows10_2004, ref useDarkMode, sizeof(int));
-                }
-            }
-        }
+        ApplyWindowColorMode();
 
         if (_restoreMaximized)
         {
             WindowState = WindowState.Maximized;
         }
+    }
+
+    private void ApplyWindowColorMode()
+    {
+        if (SystemParameters.HighContrast)
+        {
+            return;
+        }
+
+        var handle = new WindowInteropHelper(this).Handle;
+        if (handle == IntPtr.Zero)
+        {
+            return;
+        }
+
+        var useDarkMode = IsWindowsAppsDarkTheme() ? 1 : 0;
+        if (DwmSetWindowAttribute(handle, DwmUseImmersiveDarkMode, ref useDarkMode, sizeof(int)) != 0)
+        {
+            DwmSetWindowAttribute(handle, DwmUseImmersiveDarkModeBeforeWindows10_2004, ref useDarkMode, sizeof(int));
+        }
+    }
+
+    private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e) =>
+        Dispatcher.BeginInvoke(ApplyWindowColorMode);
+
+    private void OnDisplaySettingsChanged(object? sender, EventArgs e) =>
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (WindowState == WindowState.Normal && !_isWebViewFullScreen)
+            {
+                FitInitialWindowToWorkArea();
+                KeepWindowVisible();
+            }
+        });
+
+    private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
+    {
+        if (e.Mode != PowerModes.Resume)
+        {
+            return;
+        }
+
+        Dispatcher.BeginInvoke(async () =>
+        {
+            if (BrowserErrorPanel.Visibility == Visibility.Visible)
+            {
+                await InitializeBrowserAsync();
+            }
+        });
     }
 
     private static bool IsWindowsAppsDarkTheme()
@@ -396,6 +437,9 @@ public partial class MainWindow : Window
     private void OnClosed(object? sender, EventArgs e)
     {
         SaveWindowPlacement();
+        SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
+        SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+        SystemEvents.PowerModeChanged -= OnPowerModeChanged;
 
         if (BrowserWebView.CoreWebView2 is not null)
         {
