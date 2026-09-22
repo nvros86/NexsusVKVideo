@@ -220,13 +220,20 @@ public partial class MainWindow : Window
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         var coreWebView2 = BrowserWebView.CoreWebView2;
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        var modifiers = Keyboard.Modifiers;
+
+        if (modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && key == Key.Delete)
+        {
+            ScheduleProfileReset();
+            e.Handled = true;
+            return;
+        }
+
         if (coreWebView2 is null)
         {
             return;
         }
-
-        var key = e.Key == Key.System ? e.SystemKey : e.Key;
-        var modifiers = Keyboard.Modifiers;
 
         if (modifiers == ModifierKeys.Alt && key == Key.Left && coreWebView2.CanGoBack)
         {
@@ -276,6 +283,37 @@ public partial class MainWindow : Window
 
     private void SetZoomFactor(double zoomFactor) =>
         BrowserWebView.ZoomFactor = Math.Clamp(zoomFactor, MinimumZoomFactor, MaximumZoomFactor);
+
+    private async void ScheduleProfileReset()
+    {
+        var result = MessageBox.Show(
+            "После следующего запуска будут удалены локальные данные VK Video: cookies, активный вход и настройки сайта. Продолжить?",
+            "Очистка локальных данных",
+            MessageBoxButton.OKCancel,
+            MessageBoxImage.Warning,
+            MessageBoxResult.Cancel);
+        if (result != MessageBoxResult.OK)
+        {
+            return;
+        }
+
+        try
+        {
+            var resetScheduler = new WebViewProfileResetScheduler(
+                ApplicationDataPaths.GetWebViewUserDataPath(),
+                ApplicationDataPaths.GetWebViewProfileResetMarkerPath());
+            await resetScheduler.ScheduleAsync(CancellationToken.None);
+            MessageBox.Show(
+                "Очистка запланирована. Закройте и снова откройте NexsusVKVideo, чтобы применить её.",
+                "Очистка локальных данных",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception)
+        {
+            ShowError("Не удалось запланировать очистку локальных данных. Повторите попытку.");
+        }
+    }
 
     private void EnterWebViewFullScreen()
     {
