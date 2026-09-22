@@ -26,11 +26,15 @@ public partial class MainWindow : Window
     private ResizeMode _resizeModeBeforeFullScreen;
     private bool _isWebViewFullScreen;
     private bool _isBrowserInitializing;
+    private readonly WindowPlacementStore _windowPlacementStore = new(ApplicationDataPaths.GetWindowPlacementPath());
+    private bool _restoreMaximized;
 
     public MainWindow()
     {
         InitializeComponent();
+        RestoreWindowPlacement();
         FitInitialWindowToWorkArea();
+        KeepWindowVisible();
         SourceInitialized += OnSourceInitialized;
         Loaded += OnLoaded;
         Closed += OnClosed;
@@ -39,21 +43,22 @@ public partial class MainWindow : Window
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
-        if (SystemParameters.HighContrast)
+        if (!SystemParameters.HighContrast)
         {
-            return;
+            var handle = new WindowInteropHelper(this).Handle;
+            if (handle != IntPtr.Zero)
+            {
+                var useDarkMode = IsWindowsAppsDarkTheme() ? 1 : 0;
+                if (DwmSetWindowAttribute(handle, DwmUseImmersiveDarkMode, ref useDarkMode, sizeof(int)) != 0)
+                {
+                    DwmSetWindowAttribute(handle, DwmUseImmersiveDarkModeBeforeWindows10_2004, ref useDarkMode, sizeof(int));
+                }
+            }
         }
 
-        var handle = new WindowInteropHelper(this).Handle;
-        if (handle == IntPtr.Zero)
+        if (_restoreMaximized)
         {
-            return;
-        }
-
-        var useDarkMode = IsWindowsAppsDarkTheme() ? 1 : 0;
-        if (DwmSetWindowAttribute(handle, DwmUseImmersiveDarkMode, ref useDarkMode, sizeof(int)) != 0)
-        {
-            DwmSetWindowAttribute(handle, DwmUseImmersiveDarkModeBeforeWindows10_2004, ref useDarkMode, sizeof(int));
+            WindowState = WindowState.Maximized;
         }
     }
 
@@ -80,6 +85,37 @@ public partial class MainWindow : Window
         Width = Math.Clamp(Width, minimumWidth, availableWidth);
         Height = Math.Clamp(Height, minimumHeight, availableHeight);
     }
+
+    private void RestoreWindowPlacement()
+    {
+        var placement = _windowPlacementStore.Load();
+        if (placement is null || !IsFinite(placement.Left) || !IsFinite(placement.Top)
+            || !IsFinite(placement.Width) || !IsFinite(placement.Height)
+            || placement.Width <= 0 || placement.Height <= 0)
+        {
+            return;
+        }
+
+        Left = placement.Left;
+        Top = placement.Top;
+        Width = placement.Width;
+        Height = placement.Height;
+        _restoreMaximized = placement.IsMaximized;
+    }
+
+    private void KeepWindowVisible()
+    {
+        const double visibleEdge = 96;
+        var virtualLeft = SystemParameters.VirtualScreenLeft;
+        var virtualTop = SystemParameters.VirtualScreenTop;
+        var virtualRight = virtualLeft + SystemParameters.VirtualScreenWidth;
+        var virtualBottom = virtualTop + SystemParameters.VirtualScreenHeight;
+
+        Left = Math.Clamp(Left, virtualLeft - Width + visibleEdge, virtualRight - visibleEdge);
+        Top = Math.Clamp(Top, virtualTop - Height + visibleEdge, virtualBottom - visibleEdge);
+    }
+
+    private static bool IsFinite(double value) => !double.IsNaN(value) && !double.IsInfinity(value);
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
@@ -292,10 +328,29 @@ public partial class MainWindow : Window
 
     private void OnClosed(object? sender, EventArgs e)
     {
+        SaveWindowPlacement();
+
         if (BrowserWebView.CoreWebView2 is not null)
         {
             BrowserWebView.CoreWebView2.ContainsFullScreenElementChanged -= OnContainsFullScreenElementChanged;
         }
+    }
+
+    private void SaveWindowPlacement()
+    {
+        var bounds = WindowState == WindowState.Normal ? new Rect(Left, Top, Width, Height) : RestoreBounds;
+        if (!IsFinite(bounds.Left) || !IsFinite(bounds.Top) || !IsFinite(bounds.Width) || !IsFinite(bounds.Height)
+            || bounds.Width <= 0 || bounds.Height <= 0)
+        {
+            return;
+        }
+
+        _windowPlacementStore.Save(new WindowPlacement(
+            bounds.Left,
+            bounds.Top,
+            bounds.Width,
+            bounds.Height,
+            !_isWebViewFullScreen && WindowState == WindowState.Maximized));
     }
 
     [DllImport("dwmapi.dll", PreserveSig = true)]

@@ -11,4 +11,6 @@ public static class ApplicationDataPaths
     public static string GetWebViewUserDataPath() => Path.Combine(GetApplicationDataDirectory(), "WebView2");
 
     public static string GetWebViewProfileResetMarkerPath() => Path.Combine(GetApplicationDataDirectory(), "data", "webview2-reset.pending");
+
+    public static string GetWindowPlacementPath() => Path.Combine(GetApplicationDataDirectory(), "window-placement.json");
 }
