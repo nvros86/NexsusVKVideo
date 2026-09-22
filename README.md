@@ -14,14 +14,14 @@ _Скриншот сделан в `v0.2.0-beta.1` со свежим неавто
 
 ## Скачать
 
-Актуальная beta-версия: [v0.2.0-beta.1](https://github.com/nvros86/NexsusVKVideo/releases/tag/v0.2.0-beta.1).
+Актуальная beta-версия: [v0.2.1-beta.1](https://github.com/nvros86/NexsusVKVideo/releases/tag/v0.2.1-beta.1).
 
 | Файл | Для чего |
 |---|---|
-| [NexsusVKVideo-Setup-0.2.0-beta.1.exe](https://github.com/nvros86/NexsusVKVideo/releases/download/v0.2.0-beta.1/NexsusVKVideo-Setup-0.2.0-beta.1.exe) | Рекомендуемый per-user установщик Windows x64. |
-| [NexsusVKVideo.App.exe](https://github.com/nvros86/NexsusVKVideo/releases/download/v0.2.0-beta.1/NexsusVKVideo.App.exe) | Один standalone EXE без установки. |
+| [NexsusVKVideo-Setup-0.2.1-beta.1.exe](https://github.com/nvros86/NexsusVKVideo/releases/download/v0.2.1-beta.1/NexsusVKVideo-Setup-0.2.1-beta.1.exe) | Рекомендуемый per-user установщик Windows x64. |
+| [NexsusVKVideo.App.exe](https://github.com/nvros86/NexsusVKVideo/releases/download/v0.2.1-beta.1/NexsusVKVideo.App.exe) | Один standalone EXE без установки. |
 
-Оба файла beta-версии пока не имеют цифровой подписи. Перед запуском сверяйте SHA-256 со значениями на [странице релиза](https://github.com/nvros86/NexsusVKVideo/releases/tag/v0.2.0-beta.1). Подписанный выпуск требует отдельного сертификата code signing.
+Оба файла beta-версии пока не имеют цифровой подписи. Перед запуском сверяйте SHA-256 со значениями на [странице релиза](https://github.com/nvros86/NexsusVKVideo/releases/tag/v0.2.1-beta.1). Подписанный выпуск требует отдельного сертификата code signing.
 
 ## Возможности
 

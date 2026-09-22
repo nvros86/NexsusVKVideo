@@ -6,7 +6,7 @@ on:
       tag:
         description: Existing annotated tag to publish
         required: true
-        default: v0.2.0-beta.1
+        default: v0.2.1-beta.1
         type: string
 
 permissions:
