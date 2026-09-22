@@ -1,0 +1,57 @@
+name: publish beta release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing annotated tag to publish
+        required: true
+        default: v0.2.0-beta.1
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore, build, and test
+        shell: pwsh
+        run: |
+          dotnet restore NexsusVKVideo.sln
+          dotnet build NexsusVKVideo.sln -c Release --no-restore
+          dotnet test NexsusVKVideo.sln -c Release --no-build
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+
+      - name: Build release artifacts
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          $version = $env:RELEASE_TAG.TrimStart('v')
+          $compiler = Get-ChildItem 'C:\Program Files (x86)\Inno Setup*\ISCC.exe', 'C:\Program Files\Inno Setup*\ISCC.exe' -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+          if ([string]::IsNullOrWhiteSpace($compiler)) { throw 'Inno Setup compiler was not installed.' }
+          ./scripts/Build-Installer.ps1 -Version $version -SkipRestore -InnoSetupCompiler $compiler
+
+      - name: Upload and publish prerelease
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          $version = $env:RELEASE_TAG.TrimStart('v')
+          gh release upload $env:RELEASE_TAG "artifacts/installer/NexsusVKVideo-Setup-$version.exe#Recommended installer for Windows x64" "artifacts/publish/$version/NexsusVKVideo.App.exe#Standalone single-file EXE for Windows x64" --clobber
+          gh release edit $env:RELEASE_TAG --draft=false --prerelease

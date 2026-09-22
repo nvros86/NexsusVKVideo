@@ -38,7 +38,7 @@ NexsusVKVideo остаётся внутри защищённых доменов 
 
 ## Сборка установщика
 
-Установщик создаётся для версии из файла проекта с помощью Inno Setup 7 и не требует административных прав: `powershell -ExecutionPolicy Bypass -File scripts/Build-Installer.ps1`. Результат будет в `artifacts/installer/`. При необходимости версия явно передаётся как `-Version 0.2.0-beta.1`. Скрипт сначала публикует single-file EXE, затем упаковывает его в `NexsusVKVideo-Setup-<версия>.exe`.
+Установщик создаётся для версии из файла проекта с помощью Inno Setup 7 и не требует административных прав: `powershell -ExecutionPolicy Bypass -File scripts/Build-Installer.ps1`. Результат будет в `artifacts/installer/`. При необходимости версия явно передаётся как `-Version 0.2.0-beta.1`. Скрипт сначала публикует single-file EXE, затем упаковывает его в `NexsusVKVideo-Setup-<версия>.exe`. Для проверенного beta-выпуска workflow `publish beta release` повторяет restore, build и test, собирает оба файла на GitHub Actions и публикует их только после успешных проверок.
 
 ## Быстрый старт
 1. Распакуйте содержимое ZIP прямо в корень пустого репозитория: рядом должны оказаться AGENTS.md, src/, docs/ и .github/.
