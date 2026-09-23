@@ -1,4 +1,4 @@
-name: publish beta release
+name: publish release
 
 on:
   workflow_dispatch:
@@ -6,8 +6,13 @@ on:
       tag:
         description: Existing annotated tag to publish
         required: true
-        default: v0.2.1-beta.1
+        default: v0.2.1
         type: string
+      prerelease:
+        description: Publish as a prerelease
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -51,7 +56,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.tag }}
+          IS_PRERELEASE: ${{ inputs.prerelease }}
         run: |
           $version = $env:RELEASE_TAG.TrimStart('v')
           gh release upload $env:RELEASE_TAG "artifacts/installer/NexsusVKVideo-Setup-$version.exe#Recommended installer for Windows x64" "artifacts/publish/$version/NexsusVKVideo.App.exe#Standalone single-file EXE for Windows x64" --clobber
-          gh release edit $env:RELEASE_TAG --draft=false --prerelease
+          if ($env:IS_PRERELEASE -eq 'true') {
+            gh release edit $env:RELEASE_TAG --draft=false --prerelease
+          }
+          else {
+            gh release edit $env:RELEASE_TAG --draft=false
+          }
